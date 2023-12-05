@@ -1,0 +1,16 @@
+<launch>
+  <!-- Parameters -->
+  <rosparam file="$(find dwa_planner)/config/params.yaml" command="load" subst_value="true" />
+
+  <!-- DWA planner -->
+  <node pkg="dwa_planner" type="dwa_planner_node" name="dwa_planner" output="screen" />
+
+  <!-- DWA planner visualization -->
+  <!-- <node pkg="dwa_planner" type="local_planner_visualization_node" name="local_planner_visualization" output="screen" /> -->
+
+  <!-- Rviz -->
+  <node pkg="rviz" type="rviz" name="rviz_dwa_planner" args="-d $(find dwa_planner)/rviz/local_planner.rviz" />
+
+  <!-- RQT -->
+  <!-- <node pkg="rqt_gui" type="rqt_gui" name="rqt" args="perspective-file $(find dwa_planner)/rviz/rviz.perspective" /> -->
+</launch>
