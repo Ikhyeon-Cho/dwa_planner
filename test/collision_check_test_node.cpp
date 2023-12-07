@@ -2,7 +2,7 @@
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <Eigen/Dense>
-#include <isr_ros_utils/core/core.h>
+#include <ros_node_utils/Core.h>
 
 int main(int argc, char** argv)
 {

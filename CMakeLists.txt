@@ -5,9 +5,11 @@ add_compile_options(-std=c++14)
 find_package(PCL REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  ros_node_utils
+  ros_transform_utils
+  ros_pcl_utils
   grid_map_core
   grid_map_ros
-  isr_ros_utils
 )
 
 catkin_package(
@@ -17,9 +19,11 @@ catkin_package(
     # dwa_planner
   CATKIN_DEPENDS 
     roscpp
+    ros_node_utils
+    ros_transform_utils
+    ros_pcl_utils
     grid_map_core
     grid_map_ros
-    isr_ros_utils
 )
 
 ###########
@@ -50,13 +54,6 @@ add_executable(local_planner_visualization_node src/local_planner_visualization_
   
 )
 target_link_libraries(local_planner_visualization_node
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES}
-)
-
-add_executable(test_node test/collision_check_test_node.cpp
-)
-target_link_libraries(test_node
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
 )

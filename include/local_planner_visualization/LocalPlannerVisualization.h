@@ -14,7 +14,7 @@
 #include <visualization_msgs/Marker.h>
 #include <grid_map_ros/GridMapRosConverter.hpp>
 
-#include <isr_ros_utils/core/core.h>
+#include <ros_node_utils/Core.h>
 
 namespace ros
 {
