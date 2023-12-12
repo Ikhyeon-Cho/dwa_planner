@@ -1,0 +1,11 @@
+<launch>
+  <arg name="package" value="dwa_planner" />
+  <arg name="package_dir" value="$(find dwa_planner)" />
+
+  <!-- Read parameters -->
+  <rosparam file="$(arg package_dir)/config/params.yaml" command="load" subst_value="true" />
+
+  <!-- Launch DWA planner -->
+  <node pkg="$(arg package)" type="$(arg package)_node" name="$(arg package)_node" output="screen" />
+
+</launch>
