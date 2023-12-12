@@ -1,24 +1,31 @@
 dwa_planner_node:
   Subscribed_Topics:
     goal: "/move_base_simple/goal"
-    pointcloud: "/velodyne_front/velodyne_points"
+    pointcloud: "/laser_fake"
 
   Published_Topics:
-    velocity: "/cmd_vel"
+    velocity: "/best_velocity"
     velocity_window: "window"
   
   Parameters:
     ## -- Frame Ids
     base_frameId: "base_link"
     map_frameId: "map"
+
     ## -- Duration
     velocity_publish_duration: 0.1 # 10Hz
-    ## -- velocity constraints
+    velocityWindow_publish_duration: 0.1
+    
+    ## -- Velocity constraints
     wheelbase_length: 0.6
     max_linear_velocity: 1.0
-    max_angular_velocity: 1.0
+    max_angular_velocity: 0.6
     has_max_wheel_velocity: false
     max_wheel_velocity: 0.7
+    
+    ## -- Collision check
+    robot_radius: 1.0
+
     ## -- DWA parameter
     target_heading: 1.5
     clearance: 1.0

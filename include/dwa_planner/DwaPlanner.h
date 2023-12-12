@@ -32,6 +32,8 @@ public:
   // Robot dynamics: assume two-wheeled differential drive robot
   void setVelocityspaceLimit(double max_wheel_velocity);
 
+  void setRobotRadius(double);
+
   void doVelocityPruning(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr& obstacle);
 
   void maximizeObjectiveFunction();
@@ -69,6 +71,7 @@ private:
   double weight_targetDistance_{ 0.0 };
 
   // Collision check parameters
+  double robot_radius_{ 1.0 };
   double collisionCheck_timehorizon_{ 3.0 };
 };
 

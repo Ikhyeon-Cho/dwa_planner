@@ -19,6 +19,8 @@ LocalPlanner::LocalPlanner()
   if (has_max_wheel_velocity.param())
     dwa_planner_.setVelocityspaceLimit(max_wheel_vel.param());
 
+  dwa_planner_.setRobotRadius(robot_radius.param());
+
   dwa_planner_.setCostWeight(weight_targetHeading.param(), weight_clearance.param(), weight_velocity.param(),
                              weight_targetDistance.param());
 
@@ -33,8 +35,6 @@ void LocalPlanner::localGoalCallback(const geometry_msgs::PoseStampedConstPtr& m
 
 void LocalPlanner::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
-  MilliTimer timer;
-
   auto cloud_raw = boost::make_shared<pcl::PointCloud<pcl::PointXYZI>>();
   pcl::fromROSMsg(*msg, *cloud_raw);
 
@@ -61,7 +61,7 @@ void LocalPlanner::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& ms
   velocity_window_publisher.publish(msg_velocityspace);
 }
 
-void LocalPlanner::controlLoop(const ros::TimerEvent& event)
+void LocalPlanner::DWA(const ros::TimerEvent& event)
 {
   // Since the robot is keep moving, goal position in local frame should be updated
   // Goal should be transformed to local(robot) frame first. Then fed into the local planner
@@ -71,17 +71,14 @@ void LocalPlanner::controlLoop(const ros::TimerEvent& event)
 
   dwa_planner_.setLocalGoal(Eigen::Vector2d(local_goal_pose.pose.position.x, local_goal_pose.pose.position.y));
 
-  // Update objective function
   dwa_planner_.maximizeObjectiveFunction();
 
   auto velocity_bset = dwa_planner_.findBestVelocity();
 
-  // cmd vel
   geometry_msgs::Twist msg_vel;
   DwaPlannerRosConverter::toVelocityMsg(velocity_bset, msg_vel);
   cmdvel_publisher.publish(msg_vel);
 
-  // local plan
   visualization_msgs::Marker msg_path;
   DwaPlannerRosConverter::toPathMsg(velocity_bset, 3.0, msg_path);
   msg_path.color.b = 1.0;
@@ -94,8 +91,6 @@ void LocalPlanner::controlLoop(const ros::TimerEvent& event)
 // local planner node only visualizes current best local plan and cmd_vel(not visualizable)
 void LocalPlanner::visualizeVelocityWindow(const ros::TimerEvent& event)
 {
-  MilliTimer timer;
-
   const auto& v_window = dwa_planner_.getVelocityWindow();
   double v_max = 0;
   grid_map::Index max_v_index;
@@ -144,8 +139,6 @@ void LocalPlanner::visualizeVelocityWindow(const ros::TimerEvent& event)
   }
 
   path_candidate_publisher.publish(msg);
-
-  timer.toc("visualize");
 }
 
 }  // namespace ros

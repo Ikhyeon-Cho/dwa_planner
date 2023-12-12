@@ -25,6 +25,11 @@ void DwaPlanner::setLocalGoal(const Eigen::Vector2d& goal_position)
   goal_position_ = goal_position;
 }
 
+void DwaPlanner::setRobotRadius(double robot_radius)
+{
+  robot_radius_ = robot_radius;
+}
+
 void DwaPlanner::setCostWeight(double target_heading, double clearance, double velocity, double target_distance)
 {
   weight_targetHeading_ = target_heading;
@@ -63,7 +68,6 @@ void DwaPlanner::doVelocityPruning(const pcl::PointCloud<pcl::PointXYZI>::ConstP
 
     // Collision Check at current velocity
     Eigen::Vector2d velocity = velocity_space_.getVelocityAt(*iterator);
-    const auto& robot_radius = wheelbase_length_;
     const auto& v = velocity.x();
     const auto& w = velocity.y();
 
@@ -90,14 +94,14 @@ void DwaPlanner::doVelocityPruning(const pcl::PointCloud<pcl::PointXYZI>::ConstP
 
         // 3. First, check whether the obstacle is inside the robot pathway (circular trajectories)
         // Please refer to Figure.19 of https://www.ri.cmu.edu/pub_files/pub1/fox_dieter_1997_1/fox_dieter_1997_1.pdf
-        if (std::abs(from_ic_to_obstacle - i_c_radius) > robot_radius)
+        if (std::abs(from_ic_to_obstacle - i_c_radius) > robot_radius_)
           continue;  // no collision arises
 
         // do trajectory simulation and check collision
         double sim_time =
             (obstacle.intensity > collisionCheck_timehorizon_) ? obstacle.intensity : collisionCheck_timehorizon_;
         TrajectorySimulator trajectory_sim(velocity, sim_time);  // intensity holds distance to obstacle
-        if (trajectory_sim.hasCollisionWith(Eigen::Vector2d(obstacle.x, obstacle.y), robot_radius))
+        if (trajectory_sim.hasCollisionWith(Eigen::Vector2d(obstacle.x, obstacle.y), robot_radius_))
         {
           velocity_space_.makeInvalidAt(*iterator);
           pruned_velocity_indices_.push_back(*iterator);
@@ -110,7 +114,7 @@ void DwaPlanner::doVelocityPruning(const pcl::PointCloud<pcl::PointXYZI>::ConstP
                                                                                          // position (x-dir)
         continue;
 
-      if (std::abs(w) < 1e-2 && std::abs(obstacle.y) > robot_radius)  // outside of predicted position (y-dir)
+      if (std::abs(w) < 1e-2 && std::abs(obstacle.y) > robot_radius_)  // outside of predicted position (y-dir)
         continue;
 
       if (std::abs(w) < 1e-2)
@@ -118,7 +122,7 @@ void DwaPlanner::doVelocityPruning(const pcl::PointCloud<pcl::PointXYZI>::ConstP
         double sim_time =
             (obstacle.intensity > collisionCheck_timehorizon_) ? obstacle.intensity : collisionCheck_timehorizon_;
         TrajectorySimulator trajectory_sim(velocity, sim_time);
-        if (trajectory_sim.hasCollisionWith(Eigen::Vector2d(obstacle.x, obstacle.y), robot_radius))
+        if (trajectory_sim.hasCollisionWith(Eigen::Vector2d(obstacle.x, obstacle.y), robot_radius_))
         {
           velocity_space_.makeInvalidAt(*iterator);
           pruned_velocity_indices_.push_back(*iterator);
@@ -279,7 +283,8 @@ void DwaPlanner::updateObjectiveFunction()
   // Expected behavior: Rotation in the current position
   if (goal_position_.x() < 0)
   {
-    objective_function_matrix = weight_targetHeading_ * targetHeading + weight_clearance_ * clearance;
+    objective_function_matrix =
+        weight_targetHeading_ * targetHeading + weight_clearance_ * clearance + weight_targetDistance_ * targetDistance;
   }
   else
   {

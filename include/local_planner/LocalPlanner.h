@@ -40,7 +40,7 @@ public:
 
   void visualizeVelocityWindow(const ros::TimerEvent& event);
 
-  void controlLoop(const ros::TimerEvent& event);
+  void DWA(const ros::TimerEvent& event);
 
 public:
   // Subscribed Topics
@@ -61,6 +61,8 @@ public:
   roscpp::Parameter<double> max_angular_velocity{ "~/Parameters/max_angular_velocity", 1.0 };
   roscpp::Parameter<bool> has_max_wheel_velocity{ "~/Parameters/has_max_wheel_velocity", false };
   roscpp::Parameter<double> max_wheel_vel{ "~/Parameters/max_wheel_velocity", 1.0 };
+  // -- Collision check parameters
+  roscpp::Parameter<double> robot_radius{ "~/Parameters/robot_radius", 1.0 };
   // -- Cost function parameters
   roscpp::Parameter<double> weight_targetHeading{ "~/Parameters/target_heading", 1.0 };
   roscpp::Parameter<double> weight_clearance{ "~/Parameters/clearance", 1.0 };
@@ -83,7 +85,7 @@ private:
                                                                   this };
   roscpp::Subscriber<sensor_msgs::PointCloud2> pointcloud_subscriber{ pointcloud_topic.param(),
                                                                       &LocalPlanner::pointcloudCallback, this };
-  roscpp::Timer velocity_publish_timer{ velocity_publish_duration.param(), &LocalPlanner::controlLoop, this };
+  roscpp::Timer velocity_publish_timer{ velocity_publish_duration.param(), &LocalPlanner::DWA, this };
   roscpp::Timer window_visualization_timer{ velocityWindow_publish_duration, &LocalPlanner::visualizeVelocityWindow,
                                             this };
 
