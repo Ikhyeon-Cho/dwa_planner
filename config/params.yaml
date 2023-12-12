@@ -1,26 +1,24 @@
-## Frame Ids
-frameId_robot: "base_link"
-frameId_map: "map"
-
-LocalPlannerNode:
-  SubscribedTopic:
+dwa_planner_node:
+  Subscribed_Topics:
     goal: "/move_base_simple/goal"
     pointcloud: "/velodyne_front/velodyne_points"
 
-  PublishingTopic:
-    cmd_vel: "/cmd_vel"
-
-  DWA:
-    ## -- control time
-    control_duration: 0.01 # 10Hz
-
+  Published_Topics:
+    velocity: "/cmd_vel"
+    velocity_window: "window"
+  
+  Parameters:
+    ## -- Frame Ids
+    base_frameId: "base_link"
+    map_frameId: "map"
+    ## -- Duration
+    velocity_publish_duration: 0.1 # 10Hz
     ## -- velocity constraints
     wheelbase_length: 0.6
     max_linear_velocity: 1.0
     max_angular_velocity: 1.0
     has_max_wheel_velocity: false
     max_wheel_velocity: 0.7
-
     ## -- DWA parameter
     target_heading: 1.5
     clearance: 1.0

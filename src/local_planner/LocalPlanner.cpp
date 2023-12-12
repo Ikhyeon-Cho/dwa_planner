@@ -22,13 +22,13 @@ LocalPlanner::LocalPlanner()
   dwa_planner_.setCostWeight(weight_targetHeading.param(), weight_clearance.param(), weight_velocity.param(),
                              weight_targetDistance.param());
 
-  visualization_timer_velocityWindow.start();
+  window_visualization_timer.start();
 }
 
 void LocalPlanner::localGoalCallback(const geometry_msgs::PoseStampedConstPtr& msg)
 {
   goal_ = *msg;
-  control_timer.start();
+  velocity_publish_timer.start();
 }
 
 void LocalPlanner::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
@@ -39,7 +39,7 @@ void LocalPlanner::pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& ms
   pcl::fromROSMsg(*msg, *cloud_raw);
 
   bool has_transformToBase;
-  auto base_cloud = pc_processor_.transformPointcloud(cloud_raw, frameId_robot.param(), has_transformToBase);
+  auto base_cloud = pc_processor_.transformPointcloud(cloud_raw, base_frameId.param(), has_transformToBase);
   if (!has_transformToBase)
     return;
 
@@ -66,7 +66,7 @@ void LocalPlanner::controlLoop(const ros::TimerEvent& event)
   // Since the robot is keep moving, goal position in local frame should be updated
   // Goal should be transformed to local(robot) frame first. Then fed into the local planner
   geometry_msgs::PoseStamped local_goal_pose;
-  if (!transform_handler_.doTransform(goal_, frameId_robot.param(), local_goal_pose))
+  if (!transform_handler_.doTransform(goal_, base_frameId.param(), local_goal_pose))
     return;
 
   dwa_planner_.setLocalGoal(Eigen::Vector2d(local_goal_pose.pose.position.x, local_goal_pose.pose.position.y));
