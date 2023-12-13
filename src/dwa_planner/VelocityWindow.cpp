@@ -60,7 +60,7 @@ bool VelocityWindow::isInvalidAt(const grid_map::Index& index) const
   return (at("is_valid", index) - INVALID) < 1e-3;
 }
 
-grid_map::SubmapIterator VelocityWindow::getSquareIterator(const grid_map::Index& query_index, int search_length) const
+grid_map::SubmapIterator VelocityWindow::getSquareIteratorAt(const grid_map::Index& query_index, int search_length) const
 {
   grid_map::Index submap_start_index = query_index - grid_map::Index(search_length, search_length);
   grid_map::Index submap_buffer_size = grid_map::Index(2 * search_length + 1, 2 * search_length + 1);

@@ -15,14 +15,14 @@ namespace ros
 {
 LocalPlanner::LocalPlanner()
 {
+  dwa_planner_.setCollsionCheckParams(robot_radius.param(), collisionCheck_timeHorizon.param(), safety_margin.param());
+
+  dwa_planner_.setOptimizationParam(optimization_timeHorizon.param(), weight_targetHeading.param(),
+                                    weight_clearance.param(), weight_velocity.param());
+
   // Pruning of velocity search space by robot kinodynamics
   if (has_max_wheel_velocity.param())
-    dwa_planner_.setVelocityspaceLimit(max_wheel_vel.param());
-
-  dwa_planner_.setRobotRadius(robot_radius.param());
-
-  dwa_planner_.setCostWeight(weight_targetHeading.param(), weight_clearance.param(), weight_velocity.param(),
-                             weight_targetDistance.param());
+    dwa_planner_.setVelocityspaceLimit(max_wheel_vel.param(), wheelbase_length.param());
 
   window_visualization_timer.start();
 }
@@ -121,18 +121,18 @@ void LocalPlanner::visualizeVelocityWindow(const ros::TimerEvent& event)
   // iteration to column-wise direction
   for (size_t i = 0; i < v_window.getSize()(1); ++i)
   {
-    grid_map::Index index(max_v_index.x() + 1, i);  // almost max linear vel
+    grid_map::Index index(max_v_index.x() + 4, i);  // almost max linear vel
     auto velocity = v_window.getVelocityAt(index);
     visualization_msgs::Marker path_msg;
     if (v_window.isInvalidAt(index))
     {
-      DwaPlannerRosConverter::toPathMsg(velocity, 3.0, path_msg, true);
+      DwaPlannerRosConverter::toPathMsg(velocity, optimization_timeHorizon.param(), path_msg, true);
       path_msg.id = i;
       msg.markers.push_back(path_msg);
     }
     else
     {
-      DwaPlannerRosConverter::toPathMsg(velocity, 3.0, path_msg, false);
+      DwaPlannerRosConverter::toPathMsg(velocity, optimization_timeHorizon.param(), path_msg, false);
       path_msg.id = i;
       msg.markers.push_back(path_msg);
     }

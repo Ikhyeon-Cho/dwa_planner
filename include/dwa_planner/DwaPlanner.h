@@ -16,23 +16,25 @@
 #include <pcl/point_types.h>
 #include <queue>
 
-// Find optimal velocity directly in velocity space
-
 class DwaPlanner
 {
 public:
   DwaPlanner(const Eigen::Vector2d& max_velocity);
 
-  void setWheelbaseLength(double wheelbase_length);
-  void setMaxWheelVelocity(double max_wheel_velocity);
-  void setCostWeight(double, double, double, double);
+  /// @brief
+  /// @param
+  /// @param
+  /// @param
+  void setOptimizationParam(double time_horizon, double w_heading, double w_clearance, double w_velocity);
+
+  /// @brief Apply Kinematic constraints to velocity search space. We assume two wheel differential drive robot.
+  /// @param max_wheel_velocity [rad/s] Maximum wheel velocity
+  /// @param wheelBase_length [m] Wheel base length
+  void setVelocityspaceLimit(double max_wheel_velocity, double wheelBase_length);
+
+  void setCollsionCheckParams(double robot_radius, double time_horizon, int safety_margin);
 
   void setLocalGoal(const Eigen::Vector2d& goal_position);
-
-  // Robot dynamics: assume two-wheeled differential drive robot
-  void setVelocityspaceLimit(double max_wheel_velocity);
-
-  void setRobotRadius(double);
 
   void doVelocityPruning(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr& obstacle);
 
@@ -54,25 +56,22 @@ private:
   void updateObjectiveFunction();
 
   // Custom cost functions
-  void updateTargetDistance();
+  // void updateTargetDistance();
 
   VelocityWindow velocity_space_;
   std::vector<grid_map::Index> pruned_velocity_indices_;
   Eigen::Vector2d goal_position_{ 0, 0 };
 
-  // Robot-related parameters
-  double wheelbase_length_{ 0.5 };
-  double max_wheel_vel_{ 1.0 };
-
   // Cost function parameters
   double weight_targetHeading_{ 1.0 };
   double weight_clearance_{ 1.0 };
   double weight_velocity_{ 1.0 };
-  double weight_targetDistance_{ 0.0 };
+  double optimization_timeHorizon_{ 3.0 };
 
   // Collision check parameters
-  double robot_radius_{ 1.0 };
-  double collisionCheck_timehorizon_{ 3.0 };
+  double collisionCheck_radius_{ 1.0 };
+  double collisionCheck_timehorizon_{ 5.0 };
+  int collisionVelocity_margin_{ 5 };
 };
 
 #endif

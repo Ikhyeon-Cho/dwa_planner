@@ -55,19 +55,23 @@ public:
   // -- Frame Ids
   roscpp::Parameter<std::string> base_frameId{ "~/Parameters/base_frameId", "base_link" };
   roscpp::Parameter<std::string> map_frameId{ "~/Parameters/map_frameId", "map" };
-  // -- Velocity constraints
+  // -- Kinematic constraints
+  roscpp::Parameter<bool> has_max_wheel_velocity{ "~/Parameters/has_max_wheel_velocity", false };
   roscpp::Parameter<double> wheelbase_length{ "~/Parameters/wheelbase_length", 0.6 };
+  roscpp::Parameter<double> max_wheel_vel{ "~/Parameters/max_wheel_velocity", 1.0 };
+  // -- Velocity constraints
   roscpp::Parameter<double> max_linear_velocity{ "~/Parameters/max_linear_velocity", 1.0 };
   roscpp::Parameter<double> max_angular_velocity{ "~/Parameters/max_angular_velocity", 1.0 };
-  roscpp::Parameter<bool> has_max_wheel_velocity{ "~/Parameters/has_max_wheel_velocity", false };
-  roscpp::Parameter<double> max_wheel_vel{ "~/Parameters/max_wheel_velocity", 1.0 };
   // -- Collision check parameters
   roscpp::Parameter<double> robot_radius{ "~/Parameters/robot_radius", 1.0 };
+  roscpp::Parameter<int> safety_margin{ "~/Parameters/safety_margin", 5 };
+  roscpp::Parameter<double> collisionCheck_timeHorizon{ "~/Parameters/collisionCheck_timeHorizon", 3.0 };
   // -- Cost function parameters
   roscpp::Parameter<double> weight_targetHeading{ "~/Parameters/target_heading", 1.0 };
   roscpp::Parameter<double> weight_clearance{ "~/Parameters/clearance", 1.0 };
   roscpp::Parameter<double> weight_velocity{ "~/Parameters/velocity", 1.0 };
-  roscpp::Parameter<double> weight_targetDistance{ "~/Parameters/target_distance", 1.0 };
+  roscpp::Parameter<double> optimization_timeHorizon{ "~/Parameters/optimization_timeHorizon", 3.0 };
+  // roscpp::Parameter<double> weight_targetDistance{ "~/Parameters/target_distance", 1.0 };
   // -- Duration
   roscpp::Parameter<double> velocity_publish_duration{ "~/Parameters/velocity_publish_duration", 0.1 };
   roscpp::Parameter<double> velocityWindow_publish_duration{ "~/Parameters/velocityWindow_publish_duration", 0.2 };

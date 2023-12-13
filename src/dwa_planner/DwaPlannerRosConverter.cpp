@@ -27,7 +27,7 @@ void DwaPlannerRosConverter::toPathMsg(const Eigen::Vector2d& velocity, double t
     msg.color.r = 1.0;
     msg.color.g = 0.0;
     msg.color.b = 0.0;
-    msg.color.a = 0.5;
+    msg.color.a = 0.9;
   }
   else  // green
   {
@@ -43,6 +43,7 @@ void DwaPlannerRosConverter::toPathMsg(const Eigen::Vector2d& velocity, double t
     geometry_msgs::Point p;
     p.x = robot_position.x();
     p.y = robot_position.y();
+    p.z = 0.1;
     msg.points.push_back(p);
   }
 }

@@ -10,7 +10,7 @@
 #ifndef TRAJECTORY_SIMULATPR_H
 #define TRAJECTORY_SIMULATPR_H
 
-#include <Eigen/Core>
+#include <Eigen/Dense>
 #include <vector>
 
 class TrajectorySimulator
