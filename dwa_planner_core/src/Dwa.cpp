@@ -1,7 +1,7 @@
-#include "dwa_planner/DwaPlanner.h"
-#include "execution_timer/ExecutionTimer.h"
+#include "dwa_planner_core/Dwa.h"
+// #include "execution_timer/ExecutionTimer.h"
 
-DwaPlanner::DwaPlanner(const Eigen::Vector2d& max_velocity) : velocity_space_(max_velocity, 40)
+Dwa::Dwa(const Eigen::Vector2d& max_velocity) : velocity_space_(max_velocity, 40)
 {
   velocity_space_.add("target_heading", 0.0);
   velocity_space_.add("clearance", 0.0);
@@ -10,19 +10,19 @@ DwaPlanner::DwaPlanner(const Eigen::Vector2d& max_velocity) : velocity_space_(ma
   velocity_space_.add("objective_function", 0.0);
 }
 
-void DwaPlanner::setLocalGoal(const Eigen::Vector2d& goal_position)
+void Dwa::setLocalGoal(const Eigen::Vector2d& goal_position)
 {
   goal_position_ = goal_position;
 }
 
-void DwaPlanner::setCollsionCheckParams(double robot_radius, double time_horizon, int safety_margin)
+void Dwa::setCollsionCheckParams(double robot_radius, double time_horizon, int safety_margin)
 {
   collisionCheck_radius_ = robot_radius;
   collisionCheck_timehorizon_ = time_horizon;
   collisionVelocity_margin_ = safety_margin;
 }
 
-void DwaPlanner::setOptimizationParam(double time_horizon, double target_heading, double clearance, double velocity)
+void Dwa::setCostParam(double time_horizon, double target_heading, double clearance, double velocity)
 {
   optimization_timeHorizon_ = time_horizon;
   weight_targetHeading_ = target_heading;
@@ -30,7 +30,7 @@ void DwaPlanner::setOptimizationParam(double time_horizon, double target_heading
   weight_velocity_ = velocity;
 }
 
-void DwaPlanner::setVelocityspaceLimit(double max_wheel_velocity, double wheelBase_length)
+void Dwa::setVelocityspaceLimit(double max_wheel_velocity, double wheelBase_length)
 {
   for (grid_map::GridMapIterator iterator(velocity_space_); !iterator.isPastEnd(); ++iterator)
   {
@@ -46,7 +46,7 @@ void DwaPlanner::setVelocityspaceLimit(double max_wheel_velocity, double wheelBa
   }
 }
 
-void DwaPlanner::doVelocityPruning(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr& cloud)
+void Dwa::doVelocityPruning(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr& cloud)
 {
   // As this function is trying to do velocity pruning from current obstacle,
   // recovering of previous pruning is required
@@ -116,7 +116,7 @@ void DwaPlanner::doVelocityPruning(const pcl::PointCloud<pcl::PointXYZI>::ConstP
   }    // velocity loop ends
 }
 
-void DwaPlanner::recoverPrunedVelocity()
+void Dwa::recoverPrunedVelocity()
 {
   if (pruned_velocity_indices_.size() == 0)
     return;
@@ -128,7 +128,7 @@ void DwaPlanner::recoverPrunedVelocity()
   pruned_velocity_indices_.clear();
 }
 
-void DwaPlanner::maximizeObjectiveFunction()
+void Dwa::maximizeObjectiveFunction()
 {
   updateTargetHeading();
 
@@ -141,7 +141,7 @@ void DwaPlanner::maximizeObjectiveFunction()
   updateObjectiveFunction();
 }
 
-void DwaPlanner::updateTargetHeading()
+void Dwa::updateTargetHeading()
 {
   auto& targetHeading_cost = velocity_space_["target_heading"];
   for (grid_map::GridMapIterator iterator(velocity_space_); !iterator.isPastEnd(); ++iterator)
@@ -176,7 +176,7 @@ void DwaPlanner::updateTargetHeading()
   }
 }
 
-void DwaPlanner::updateClearance()
+void Dwa::updateClearance()
 {
   auto max_clearance_cost = collisionVelocity_margin_ * std::sqrt(2);
   velocity_space_["clearance"].setConstant(max_clearance_cost);
@@ -218,7 +218,7 @@ void DwaPlanner::updateClearance()
   clearance_cost = clearance_cost / clearance_cost.maxCoeff();  // normalize to [0, 1]
 }
 
-// void DwaPlanner::updateClearance()
+// void Dwa::updateClearance()
 // {
 //   const auto& validityCheck_matrix = velocity_space_["is_valid"];
 //   auto& clearance_matrix = velocity_space_["clearance"];
@@ -245,7 +245,7 @@ void DwaPlanner::updateClearance()
 //   clearance_matrix = shifted_matrix;
 // }
 
-void DwaPlanner::updateVelocity()
+void Dwa::updateVelocity()
 {
   auto& velocity_matrix = velocity_space_["velocity"];
   velocity_matrix = velocity_space_["v"].cwiseProduct(velocity_space_["is_valid"]);
@@ -254,7 +254,7 @@ void DwaPlanner::updateVelocity()
   velocity_matrix = velocity_matrix / velocity_matrix.maxCoeff();
 }
 
-// void DwaPlanner::updateTargetDistance()
+// void Dwa::updateTargetDistance()
 // {
 //   auto& target_distance_matrix = velocity_space_["target_distance"];
 //   for (grid_map::GridMapIterator iterator(velocity_space_); !iterator.isPastEnd(); ++iterator)
@@ -295,7 +295,7 @@ void DwaPlanner::updateVelocity()
 //   target_distance_matrix = (max_coeff_matrix - target_distance_matrix) / (max_coeff - min_coeff);
 // }
 
-void DwaPlanner::updateObjectiveFunction()
+void Dwa::updateObjectiveFunction()
 {
   const auto& targetHeading = velocity_space_["target_heading"];
   const auto& clearance = velocity_space_["clearance"];
@@ -323,7 +323,7 @@ void DwaPlanner::updateObjectiveFunction()
   objectiveFunction_matrix = (objectiveFunction_matrix - min_coeff_matrix) / (max_coeff - min_coeff);
 }
 
-Eigen::Vector2d DwaPlanner::findBestVelocity() const
+Eigen::Vector2d Dwa::findBestVelocity() const
 {
   const auto& objectiveFunction_matrix = velocity_space_["objective_function"];
 
@@ -342,7 +342,7 @@ Eigen::Vector2d DwaPlanner::findBestVelocity() const
   return velocity_space_.getVelocityAt(index_of_maxCoeff);
 }
 
-const VelocityWindow& DwaPlanner::getVelocityWindow() const
+const VelocityWindow& Dwa::getVelocityWindow() const
 {
   return velocity_space_;
 }

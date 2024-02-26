@@ -7,8 +7,8 @@
  *       Email: tre0430@korea.ac.kr
  */
 
-#ifndef LOCAL_PLANNER_VISUALIZATION_H
-#define LOCAL_PLANNER_VISUALIZATION_H
+#ifndef DWA_PLANNER_VISUALIZATION_H
+#define DWA_PLANNER_VISUALIZATION_H
 
 #include <nav_msgs/Path.h>
 #include <visualization_msgs/Marker.h>
@@ -16,12 +16,10 @@
 
 #include <ros_node_utils/Core.h>
 
-namespace ros
-{
-class LocalPlannerVisualization
+class DwaPlannerVisualization
 {
 public:
-  LocalPlannerVisualization();
+  DwaPlannerVisualization();
 
   void velocityWindowCallback(const grid_map_msgs::GridMapConstPtr& msg);
 
@@ -29,23 +27,22 @@ public:
 
 public:
   // ROS Parameters: Node
-  roscpp::Parameter<std::string> velocity_window_topic{ "LocalPlannerVisualization/SubscribedTopic/velocity_window",
+  roscpp::Parameter<std::string> velocity_window_topic{ "DwaPlannerVisualization/SubscribedTopic/velocity_window",
                                                         "dwa_planner/velocity_window" };
-  roscpp::Parameter<std::string> sim_path_topic{ "LocalPlannerVisualization/PublishingTopic/sim_path",
+  roscpp::Parameter<std::string> sim_path_topic{ "DwaPlannerVisualization/PublishingTopic/sim_path",
                                                  "dwa_planner/sim_path" };
 
   roscpp::Subscriber<grid_map_msgs::GridMap> velocity_window_subscriber{
-    velocity_window_topic.param(), &LocalPlannerVisualization::velocityWindowCallback, this
+    velocity_window_topic.param(), &DwaPlannerVisualization::velocityWindowCallback, this
   };
   roscpp::Publisher<nav_msgs::Path> sim_path_publisher{ sim_path_topic.param() };
 
   // Test
-  roscpp::Timer vis_timer{ ros::Duration(0.1), &LocalPlannerVisualization::visualize, this };
+  roscpp::Timer vis_timer{ ros::Duration(0.1), &DwaPlannerVisualization::visualize, this };
   roscpp::Publisher<visualization_msgs::Marker> path_publisher{ "path" };
 
 private:
   grid_map::GridMap velocity_window_;
 };
-}  // namespace ros
 
-#endif
+#endif  // DWA_PLANNER_VISUALIZATION_H

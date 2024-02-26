@@ -1,5 +1,5 @@
 /*
- * DWAPlanner.h
+ * Dwa.h
  *
  *  Created on: Sep 4, 2023
  *      Author: Ikhyeon Cho
@@ -7,25 +7,25 @@
  *       Email: tre0430@korea.ac.kr
  */
 
-#ifndef DWA_PLANNER_H
-#define DWA_PLANNER_H
+#ifndef DWA_CORE_H
+#define DWA_CORE_H
 
-#include "dwa_planner/VelocityWindow.h"
-#include "dwa_planner/TrajectorySimulator.h"
+#include "dwa_planner_core/VelocityWindow.h"
+#include "dwa_planner_core/TrajectorySimulator.h"
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <queue>
 
-class DwaPlanner
+class Dwa
 {
 public:
-  DwaPlanner(const Eigen::Vector2d& max_velocity);
+  Dwa(const Eigen::Vector2d& max_velocity);
 
   /// @brief
   /// @param
   /// @param
   /// @param
-  void setOptimizationParam(double time_horizon, double w_heading, double w_clearance, double w_velocity);
+  void setCostParam(double time_horizon, double w_heading, double w_clearance, double w_velocity);
 
   /// @brief Apply Kinematic constraints to velocity search space. We assume two wheel differential drive robot.
   /// @param max_wheel_velocity [rad/s] Maximum wheel velocity
@@ -74,4 +74,4 @@ private:
   int collisionVelocity_margin_{ 5 };
 };
 
-#endif
+#endif  // DWA_CORE_H

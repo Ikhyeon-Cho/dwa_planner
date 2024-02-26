@@ -1,5 +1,5 @@
 /*
- * local_planner_visualization_node.cpp
+ * dwa_planner_visualization_node.cpp
  *
  *  Created on: Nov 30, 2023
  *      Author: Ikhyeon Cho
@@ -8,14 +8,14 @@
  */
 
 #include <ros/ros.h>
-#include "local_planner_visualization/LocalPlannerVisualization.h"
+#include "dwa_planner_visualization/DwaPlannerVisualization.h"
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "local_planner_visualization_node");
+  ros::init(argc, argv, "dwa_planner_visualization_node");
   ros::NodeHandle nh("~");
 
-  ros::LocalPlannerVisualization node;
+  DwaPlannerVisualization visualization_node;
 
   ros::Rate loop_rate(1);
   while (ros::ok())

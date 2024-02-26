@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(dwa_planner)
+project(dwa_planner_visualization)
 add_compile_options(-std=c++14)
 
 find_package(PCL REQUIRED)

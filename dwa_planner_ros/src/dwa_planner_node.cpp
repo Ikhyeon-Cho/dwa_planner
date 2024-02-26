@@ -1,5 +1,5 @@
 /*
- * local_planner_node.cpp
+ * dwa_planner_node.cpp
  *
  *  Created on: Sep 3, 2023
  *      Author: Ikhyeon Cho
@@ -8,14 +8,14 @@
  */
 
 #include <ros/ros.h>
-#include "local_planner/LocalPlanner.h"
+#include "dwa_planner_ros/DwaPlanner.h"
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "dwa_planner_node");
+  ros::init(argc, argv, "dwa");
   ros::NodeHandle nh("~");
 
-  ros::LocalPlanner node;
+  DwaPlanner dwa_planner_node;
 
   ros::Rate loop_rate(10);
   while (ros::ok())

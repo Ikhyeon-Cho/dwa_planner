@@ -7,7 +7,7 @@
  *       Email: tre0430@korea.ac.kr
  */
 
-#include "dwa_planner/VelocityWindow.h"
+#include "dwa_planner_core/VelocityWindow.h"
 
 VelocityWindow::VelocityWindow(const Eigen::Vector2d& max_velocity, int n_grid)
   : grid_map::GridMap({ "v", "w", "is_valid" })

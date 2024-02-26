@@ -1,7 +1,4 @@
-#include "local_planner_visualization/LocalPlannerVisualization.h"
-
-namespace ros
-{
+#include "dwa_planner_visualization/DwaPlannerVisualization.h"
 
 LocalPlannerVisualization::LocalPlannerVisualization()
 {
@@ -18,9 +15,6 @@ void LocalPlannerVisualization::visualize(const ros::TimerEvent& event)
   visualization_msgs::Marker msg;
 
   // fill the msg
-  
 
   path_publisher.publish(msg);
 }
-
-}  // namespace ros

@@ -1,5 +1,5 @@
 /*
- * DwaPlannerRosConverter.h
+ * DwaMsgs.h
  *
  *  Created on: Dec 5, 2023
  *      Author: Ikhyeon Cho
@@ -10,11 +10,11 @@
 #ifndef DWA_PLANNER_ROS_CONVERTER_H
 #define DWA_PLANNER_ROS_CONVERTER_H
 
-#include "dwa_planner/DwaPlanner.h"
+#include "dwa_planner_core/Dwa.h"
 #include <visualization_msgs/MarkerArray.h>
 #include <geometry_msgs/Twist.h>
 
-class DwaPlannerRosConverter
+class DwaMsgs
 {
 public:
   static void toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, visualization_msgs::Marker& msg);

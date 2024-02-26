@@ -1,5 +1,5 @@
 /*
- * DwaPlannerRosConverter.cpp
+ * DwaMsgs.cpp
  *
  *  Created on: Dec 5, 2023
  *      Author: Ikhyeon Cho
@@ -7,10 +7,10 @@
  *       Email: tre0430@korea.ac.kr
  */
 
-#include "dwa_planner/DwaPlannerRosConverter.h"
+#include "dwa_planner_msgs/DwaMsgs.h"
 
-void DwaPlannerRosConverter::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon,
-                                       visualization_msgs::Marker& msg, bool has_collision)
+void DwaMsgs::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, visualization_msgs::Marker& msg,
+                        bool has_collision)
 {
   msg.header.frame_id = "base_link";
   msg.header.stamp = ros::Time::now();
@@ -48,14 +48,13 @@ void DwaPlannerRosConverter::toPathMsg(const Eigen::Vector2d& velocity, double t
   }
 }
 
-void DwaPlannerRosConverter::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon,
-                                       visualization_msgs::Marker& msg)
+void DwaMsgs::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, visualization_msgs::Marker& msg)
 {
   toPathMsg(velocity, time_horizon, msg, false);
 }
 
-void DwaPlannerRosConverter::toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualization_msgs::Marker& msg,
-                                       bool has_collision)
+void DwaMsgs::toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualization_msgs::Marker& msg,
+                        bool has_collision)
 {
   msg.header.frame_id = "base_link";
   msg.header.stamp = ros::Time::now();
@@ -91,13 +90,13 @@ void DwaPlannerRosConverter::toPathMsg(const std::vector<Eigen::Vector2d>& traje
   }
 }
 
-void DwaPlannerRosConverter::toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualization_msgs::Marker& msg)
+void DwaMsgs::toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualization_msgs::Marker& msg)
 {
   toPathMsg(trajectory, msg, false);
 }
 
-void DwaPlannerRosConverter::toPathMsg(const std::vector<Eigen::Vector2d>& velocity_candidates, double time_horizon,
-                                       visualization_msgs::MarkerArray& msg)
+void DwaMsgs::toPathMsg(const std::vector<Eigen::Vector2d>& velocity_candidates, double time_horizon,
+                        visualization_msgs::MarkerArray& msg)
 {
   int32_t path_candidate_id = 0;
   for (const auto& velocity : velocity_candidates)
@@ -113,7 +112,7 @@ void DwaPlannerRosConverter::toPathMsg(const std::vector<Eigen::Vector2d>& veloc
   }
 }
 
-void DwaPlannerRosConverter::toVelocityMsg(const Eigen::Vector2d& velocity, geometry_msgs::Twist& msg)
+void DwaMsgs::toVelocityMsg(const Eigen::Vector2d& velocity, geometry_msgs::Twist& msg)
 {
   msg.linear.x = velocity.x();
   msg.linear.y = 0;
