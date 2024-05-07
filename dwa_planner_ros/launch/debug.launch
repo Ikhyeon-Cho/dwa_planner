@@ -1,0 +1,15 @@
+<launch>
+  <!-- ROS parameters -->
+  <rosparam file="$(find dwa_planner)/config/params.yaml" command="load" subst_value="true" />
+
+  <!-- Launch DWA planner -->
+  <node pkg="dwa_planner" type="dwa_planner_node" name="dwa_planner_node" output="screen" />
+
+  <!-- Launch RViz -->
+  <node pkg="rviz" type="rviz" name="rviz_dwa_target_heading" args="-d $(find dwa_planner)/launch/rviz/target_heading.rviz" />
+  <node pkg="rviz" type="rviz" name="rviz_dwa_velocity" args="-d $(find dwa_planner)/launch/rviz/velocity.rviz" />
+  <node pkg="rviz" type="rviz" name="rviz_dwa_cleareance" args="-d $(find dwa_planner)/launch/rviz/clearance.rviz" />
+  <node pkg="rviz" type="rviz" name="rviz_dwa_cost" args="-d $(find dwa_planner)/launch/rviz/cost.rviz" />
+
+
+</launch>

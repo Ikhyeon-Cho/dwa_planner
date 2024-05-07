@@ -1,10 +1,7 @@
 <launch>
-  <arg name="package" value="dwa_planner" />
-  <arg name="package_dir" value="$(find dwa_planner)" />
-
-  <include file="$(arg package_dir)/launch/dwa_planner.launch" />
+  <!-- DWA -->
+  <include file="$(find dwa_planner)/launch/dwa_planner.launch" />
 
   <!-- Rviz -->
-  <node pkg="rviz" type="rviz" name="rviz_$(arg package)"
-    args="-d $(arg package_dir)/rviz/local_planner.rviz" />
+  <node pkg="rviz" type="rviz" name="rviz_dwa_planner" args="-d $(find dwa_planner)/launch/rviz/dwa_planner.rviz" />
 </launch>

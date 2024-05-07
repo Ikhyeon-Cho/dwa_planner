@@ -20,14 +20,15 @@ public:
   static void toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, visualization_msgs::Marker& msg);
 
   static void toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, visualization_msgs::Marker& msg,
-                        bool has_collision);
+                        const std::string& color);
 
   static void toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualization_msgs::Marker& msg);
 
   static void toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualization_msgs::Marker& msg,
                         bool has_collision);
 
-  static void toPathMsg(const std::vector<Eigen::Vector2d>& velocity_candidates, double time_horizon, visualization_msgs::MarkerArray& msg);
+  static void toPathMsg(const std::vector<Eigen::Vector2d>& velocity_candidates, double time_horizon,
+                        visualization_msgs::MarkerArray& msg);
 
   static void toVelocityMsg(const Eigen::Vector2d& velocity, geometry_msgs::Twist& msg);
 };

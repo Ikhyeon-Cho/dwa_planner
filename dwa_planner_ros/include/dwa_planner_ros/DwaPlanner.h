@@ -33,66 +33,105 @@ class DwaPlanner
 public:
   DwaPlanner();
 
-  void localGoalCallback(const geometry_msgs::PoseStampedConstPtr& msg);
+  void goalCallback(const geometry_msgs::PoseStampedConstPtr& msg);
 
-  void pointcloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg);
+  /// @brief Transform the goal position to the local frame
+  /// @param goal The goal pose in the map frame
+  /// @param local_goal The goal pose in the local frame
+  /// @return True if transform success, otherwise false
+  bool getLocalGoal(const geometry_msgs::PoseStamped& goal, geometry_msgs::PoseStamped& local_goal);
 
-  void visualizeVelocityWindow(const ros::TimerEvent& event);
+  bool alignToGoal(const geometry_msgs::PoseStamped& goal);
 
-  void DWA(const ros::TimerEvent& event);
+  void plan(const ros::TimerEvent& event);
+
+  bool isArrivedAt(const geometry_msgs::PoseStamped& goal);
+
+  bool requireEmergencyStop() const;
+
+  void laserCallback(const sensor_msgs::PointCloud2ConstPtr& msg);
+
+  double getMinDistanceToObstacle(const pcl::PointCloud<pcl::PointWithRange>::Ptr& obstacle_points);
+  
+  void publish(const ros::TimerEvent& event);
+
+  void visualizeTrajectories(const ros::TimerEvent& event);
+
 
 private:
-  ros::NodeHandle nh_{ "~" };
-  ros_utils::TransformHandler tf_handler_;
+  ros::NodeHandle nh_priv_{ "~" };
+  ros_utils::TransformHandler tf_;
 
   // Topics
-  std::string goal_topic_{ nh_.param<std::string>("goalTopic", "/move_base_simple/goal") };
-  std::string pointcloud_topic_{ nh_.param<std::string>("pointCloudTopic", "/obstacle_cloud") };
-  std::string velocity_topic_{ nh_.param<std::string>("velocityTopic", "/cmd_vel") };
-  std::string velocityWindow_topic_{ nh_.param<std::string>("velocityWindowTopic", "velocity_window") };
+  std::string goal_topic_{ nh_priv_.param<std::string>("topic/goal", "/move_base_simple/goal") };
+  std::string pointcloud_topic_{ nh_priv_.param<std::string>("topic/pointcloud", "/laser") };
 
   // Frame Ids
-  std::string baselink_frame_{ nh_.param<std::string>("baselinkFrame", "base_link") };
-  std::string map_frame_{ nh_.param<std::string>("mapFrame", "map") };
+  std::string baselink_frame_{ nh_priv_.param<std::string>("frame_id/baselink", "base_link") };
+  std::string map_frame_{ nh_priv_.param<std::string>("frame_id/map", "map") };
 
   // Robot-specific parameters
-  double wheelbase_length_{ nh_.param<double>("wheelBaseLength", 0.6) };
-  double max_linear_vel_{ nh_.param<double>("maxLinearVelocity", 1.0) };
-  double max_angular_vel_{ nh_.param<double>("maxAngularVelocity", 1.0) };
+  std::vector<double> robot_vel_max_{ nh_priv_.param<std::vector<double>>("robot/maxVelocity", { 1.0, 1.0 }) };
+  double robot_max_v_{ robot_vel_max_[0] };
+  double robot_max_w_{ robot_vel_max_[1] };
+  double robot_ref_v_{ nh_priv_.param<double>("robot/referenceVelocity", 0.6) };
+  double wheelbase_{ nh_priv_.param<double>("robot/wheelBaseLength", 0.6) };
+  bool enable_backward_motion_{ nh_priv_.param<bool>("robot/enableBackwardMotion", false) };
+
+  // Dwa Parameters: Velocity Window
+  double velocity_resolution_{ nh_priv_.param<double>("velocityWindow/resolution", 0.02) };
 
   // Dwa Parameters: collision check
-  double robot_radius_{ nh_.param<double>("robotRadius", 1.0) };
-  int safety_margin_{ nh_.param<int>("safetyMargin", 5) };
-  double collision_check_timehorizon_{ nh_.param<double>("collisionCheckTimeHorizon", 3.0) };
+  double safety_margin_{ nh_priv_.param<double>("collision/safetyMargin", 5) };
+  double robot_radius_{ nh_priv_.param<double>("collision/robotRadius", 1.0) };
+  double max_laser_range_{ nh_priv_.param<double>("collision/maxLaserRange", 10.0) };
 
   // Dwa Parameters: cost function
-  double optimization_timehorizon_{ nh_.param<double>("optimizationTimeHorizon", 3.0) };
-  double weight_targetheading_{ nh_.param<double>("targetHeading", 1.0) };
-  double weight_clearance_{ nh_.param<double>("clearance", 1.0) };
-  double weight_velocity_{ nh_.param<double>("velocity", 1.0) };
+  double w_targetheading_{ nh_priv_.param<double>("cost_function/targetHeading", 1.0) };
+  double w_clearance_{ nh_priv_.param<double>("cost_function/clearance", 1.0) };
+  double w_velocity_{ nh_priv_.param<double>("cost_function/velocity", 1.0) };
+  double time_horizon_{ nh_priv_.param<double>("collision/timeHorizon", 3.0) };
 
-  // ROS Node Duration
-  double velocity_pub_rate_{ nh_.param<double>("velocityPubRate", 10) };
-  double window_pub_rate_{ nh_.param<double>("dynamicWindowPubRate", 5) };
+  // Dwa Paramters: Status
+  double radius_goal_near_{ nh_priv_.param<double>("status/goalNearRadius", 2.0) };
+  double radius_goal_reached_{ nh_priv_.param<double>("status/goalReachedRadius", 0.2) };
+
+  // Publish rates
+  double velocity_pub_rate_{ nh_priv_.param<double>("publish_rate/cmdVel", 10) };
+  double window_pub_rate_{ nh_priv_.param<double>("publish_rate/dynamicWindow", 5) };
+  bool use_debug_{ nh_priv_.param<bool>("publish_rate/use_debug", false) };
 
   // ROS
-  ros::Subscriber sub_goal_{ nh_.subscribe(goal_topic_, 10, &DwaPlanner::localGoalCallback, this) };
-  ros::Subscriber sub_pointcloud_{ nh_.subscribe(pointcloud_topic_, 10, &DwaPlanner::pointcloudCallback, this) };
+  ros::Subscriber sub_goal_{ nh_priv_.subscribe(goal_topic_, 10, &DwaPlanner::goalCallback, this) };
+  ros::Subscriber sub_pointcloud_{ nh_priv_.subscribe(pointcloud_topic_, 10, &DwaPlanner::laserCallback, this) };
 
-  ros::Publisher pub_velocity_{ nh_.advertise<geometry_msgs::Twist>(velocity_topic_, 10) };
-  ros::Publisher pub_velocity_window_{ nh_.advertise<grid_map_msgs::GridMap>(velocityWindow_topic_, 1) };
-  ros::Publisher pub_obstacle_cloud_{ nh_.advertise<sensor_msgs::PointCloud2>("local_cloud", 1) };
-  ros::Publisher pub_path_best_{ nh_.advertise<visualization_msgs::Marker>("path_best", 1) };
-  ros::Publisher pub_path_candidates_{ nh_.advertise<visualization_msgs::MarkerArray>("path_candidates", 1) };
+  ros::Publisher pub_velocity_{ nh_priv_.advertise<geometry_msgs::Twist>("/cmd_vel", 10) };
+  ros::Publisher pub_path_best_{ nh_priv_.advertise<visualization_msgs::Marker>("path_best", 1) };
+  ros::Publisher pub_path_candidates_{ nh_priv_.advertise<visualization_msgs::MarkerArray>("path_candidates", 1) };
+  ros::Publisher pub_path_around_best_{ nh_priv_.advertise<visualization_msgs::MarkerArray>("path_around_best", 1) };
 
-  ros::Timer local_plan_timer_{ nh_.createTimer(velocity_pub_rate_, &DwaPlanner::DWA, this, false, false) };
-  ros::Timer window_visualization_timer_{ nh_.createTimer(window_pub_rate_, &DwaPlanner::visualizeVelocityWindow, this) };
+  ros::Timer local_plan_timer_{ nh_priv_.createTimer(velocity_pub_rate_, &DwaPlanner::plan, this, false, false) };
+
+  ros::Timer publish_timer_{ nh_priv_.createTimer(velocity_pub_rate_, &DwaPlanner::publish, this, false, false) };
+  ros::Timer window_visualization_timer_{ nh_priv_.createTimer(window_pub_rate_, &DwaPlanner::visualizeTrajectories,
+                                                               this) };
+
+  // Publishers for debug purpose
+  ros::Publisher pub_obstacle_cloud_;
+  ros::Publisher pub_velocity_window_;
+  ros::Publisher pub_target_heading_plan_;
+  ros::Publisher pub_clearance_plan_;
+  ros::Publisher pub_velocity_plan_;
 
 private:
-  Dwa dwa_planner_{ Eigen::Vector2d{ max_linear_vel_, max_angular_vel_ } };
+  Dwa dwa_planner_;
+  geometry_msgs::PoseStamped msg_goal_;
 
-  geometry_msgs::PoseStamped goal_;
-  geometry_msgs::Twist cmd_vel_;
+  // obstacle points
+  boost::shared_ptr<pcl::PointCloud<pcl::PointWithRange>> obstacle_points_{
+    boost::make_shared<pcl::PointCloud<pcl::PointWithRange>>()
+  };
+  double min_distance_to_obstacle_{ 1e+4 };
 };
 
 #endif  // DWA_PLANNER_H

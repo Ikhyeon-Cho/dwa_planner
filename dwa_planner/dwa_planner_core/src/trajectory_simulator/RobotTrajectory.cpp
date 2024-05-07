@@ -1,4 +1,4 @@
-#include "dwa_planner_core/RobotTrajectory.h"
+#include "trajectory_simulator/RobotTrajectory.h"
 
 Bubble::Bubble(const Eigen::Vector2d& position, double radius) : position_(position), radius_(radius)
 {

@@ -14,15 +14,14 @@
 
 class VelocityWindow : public grid_map::GridMap
 {
-  const float VALID = 1;
-  const float INVALID = 0;
+  static constexpr float IS_VALID = 1;
+  static constexpr float IS_INVALID = 0;
 
 public:
-  VelocityWindow();
-  VelocityWindow(const Eigen::Vector2d& max_velocity, int n_grid);
-  void initializeVelocitySpace();
+  VelocityWindow(double v_max, double w_max, double velocity_resolution, bool enable_backward = false);
 
-  Eigen::Vector2d getVelocityAt(const grid_map::Index& index) const;
+  std::tuple<double, double> getVelocityAt(const grid_map::Index& index) const;
+  std::tuple<double, double> getVelocityAt(int) const;
   void makeValidAt(const grid_map::Index& index);
   void makeInvalidAt(const grid_map::Index& index);
   bool isInvalidAt(const grid_map::Index& index) const;

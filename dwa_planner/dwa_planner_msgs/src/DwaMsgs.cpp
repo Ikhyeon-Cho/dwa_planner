@@ -10,7 +10,7 @@
 #include "dwa_planner_msgs/DwaMsgs.h"
 
 void DwaMsgs::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, visualization_msgs::Marker& msg,
-                        bool has_collision)
+                        const std::string& color)
 {
   msg.header.frame_id = "base_link";
   msg.header.stamp = ros::Time::now();
@@ -22,18 +22,32 @@ void DwaMsgs::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, vi
 
   msg.scale.x = 0.01;
 
-  if (has_collision)  // red
+  if (color == "red")  // red
   {
     msg.color.r = 1.0;
     msg.color.g = 0.0;
     msg.color.b = 0.0;
     msg.color.a = 0.9;
   }
-  else  // green
+  if (color == "green")  // green
   {
     msg.color.r = 0.0;
     msg.color.g = 1.0;
     msg.color.b = 0.0;
+    msg.color.a = 1.0;
+  }
+  if (color == "blue")  // blue
+  {
+    msg.color.r = 0.0;
+    msg.color.g = 0.0;
+    msg.color.b = 1.0;
+    msg.color.a = 1.0;
+  }
+  else
+  {
+    msg.color.r = 1.0;
+    msg.color.g = 1.0;
+    msg.color.b = 1.0;
     msg.color.a = 1.0;
   }
 
@@ -50,7 +64,7 @@ void DwaMsgs::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, vi
 
 void DwaMsgs::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, visualization_msgs::Marker& msg)
 {
-  toPathMsg(velocity, time_horizon, msg, false);
+  toPathMsg(velocity, time_horizon, msg, "green");
 }
 
 void DwaMsgs::toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualization_msgs::Marker& msg,

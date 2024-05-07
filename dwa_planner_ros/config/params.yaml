@@ -1,37 +1,42 @@
 dwa_planner_node:
-  Subscribed_Topics:
-    goal: "/localgoal_generator_node/goal"
-    pointcloud: "/laser_fake"
+  topic:
+    goal: "/move_base_simple/goal"
+    pointcloud: /fake_laser_node/laser
 
-  Published_Topics:
-    velocity: "/cmd_vel"
-    velocity_window: "window"
+  frame_id:
+    baselink: "base_link"
+    map: "map"
 
-  Parameters:
-    ## -- Frame Ids
-    base_frameId: "base_link"
-    map_frameId: "map"
+  robot:
+    # referenceVelocity: 0.6 # [m/s] # Should be less than maxVelocity
+    maxVelocity: [0.6, 0.8] # [v, w]
+    wheelBaseLength: 0.6 # [m]
+    enableBackwardMotion:
+      false # Default: false
+      # Backwardmotion is not significantly tested
 
-    ## -- Duration
-    velocity_publish_duration: 0.1 # 10Hz
-    velocityWindow_publish_duration: 0.1
+  collision:
+    robotRadius: 0.4 # [m]
+    safetyMargin: 0.1 # in velocity space
+    timeHorizon: 4.0 # [s]
+    maxLaserRange: 10.0 # [m]
 
-    ## -- Kinematic constraints
-    has_max_wheel_velocity: false
-    wheelbase_length: 0.6
-    max_wheel_velocity: 0.7
+  status:
+    goalNearRadius: 2.0 # [m]. Within this radius, robot stops avoidance and goes to goal
+    goalReachedRadius: 0.2 # [m]. Within this radius, robot stops
+    goalReachedAngle: 0.1 # [rad]
+    goalReachedVelocity: 0.1 # [m/s]
+    goalReachedAngularVelocity: 0.1 # [rad/s]
 
-    ## -- Velocity constraints (User settings)
-    max_linear_velocity: 1.0 # desired robot speed
-    max_angular_velocity: 0.8
+  velocity_window:
+    resolution: 0.02 # [m/s]
 
-    ## -- Collision check parameters
-    collisionCheck_timeHorizon: 7.0 # timeHorizon x maxLinerVel = max collisionCheck distance
-    robot_radius: 0.7 # physical robot size for collision check
-    safety_margin: 9 # velocity space margin from obstacle area
+  cost_function:
+    targetHeading: 2.0
+    clearance: 0.2
+    velocity: 0.2
 
-    ## -- DWA parameter
-    optimization_timeHorizon: 3.0 # timeHorizon x maxLinerVel = min localGoal distance
-    target_heading: 1.0
-    clearance: 1.0
-    velocity: 1.0
+  publish_rate:
+    cmdVel: 10 # [Hz]
+    dynamicWindow: 5 # [Hz]
+    use_debug: true

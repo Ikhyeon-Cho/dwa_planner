@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(dwa_planner_core)
-add_compile_options(-std=c++14)
+add_compile_options(-std=c++17)
 
 find_package(PCL REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
@@ -28,9 +28,9 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-  src/Dwa.cpp
-  src/RobotTrajectory.cpp
-  src/VelocityWindow.cpp
+  src/dwa_planner_core/Dwa.cpp
+  src/trajectory_simulator/RobotTrajectory.cpp
+  src/velocity_window/VelocityWindow.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

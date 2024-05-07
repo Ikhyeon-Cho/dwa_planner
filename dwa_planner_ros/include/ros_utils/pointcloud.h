@@ -41,13 +41,13 @@ static PointCloudPtr<T> transformPointcloud(const PointCloudPtr<T>& input,
   std::string source_frame(input->header.frame_id);
   if (source_frame.empty())
   {
-    ROS_ERROR_STREAM(" [ros_utils::pcl] Warning: Transform failure -  pointcloud has no frame id");
+    ROS_ERROR_STREAM_THROTTLE(3, " [ros_utils::pcl] Warning: Transform failure -  pointcloud has no frame id");
     return input;
   }
 
   if (input->empty())
   {
-    ROS_ERROR_STREAM(" [ros_utils::pcl] Warning: Transform failure -  pointcloud is empty");
+    ROS_ERROR_STREAM_THROTTLE(3," [ros_utils::pcl] Warning: Transform failure -  pointcloud is empty");
     return input;
   }
 
@@ -147,7 +147,7 @@ static PointCloudPtr<T> filterPointcloudByAngle(const PointCloudPtr<T>& input, d
     if (filter_condition)
     {
       T filtered_point = point;
-      filtered_point.intensity = sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
+      filtered_point.range = sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
       output->points.push_back(filtered_point);
     }
   }

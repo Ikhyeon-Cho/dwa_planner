@@ -13,9 +13,8 @@
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "dwa");
-  ros::NodeHandle nh("~");
 
-  DwaPlanner dwa_planner_node;
+  DwaPlanner node;
 
   ros::Rate loop_rate(10);
   while (ros::ok())
