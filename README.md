@@ -5,7 +5,7 @@ This repository provides the ROS implementation of [DWA (dynamic window approach
     <img src="dwa_planner/docs//dwa_demo.gif" alt="drawing" width="600"/>
 </p>
 
-This is a research code, expect that it changes often and any fitness for a particular purpose is disclaimed. If you are interested in the simulation tools, see [fake_simulation_ros](https://github.com/Ikhyeon-Cho/fake_simulation_ros)git  package.
+This is a research code, expect that it changes often and any fitness for a particular purpose is disclaimed. If you are interested in the simulation tools, see [fake_simulation_ros](https://github.com/Ikhyeon-Cho/fake_simulation_ros) package.
 
 ## Features
 Our implementation is not only practical in use, but also offers real-time ROS rviz visualizations of the velocity samples from the velocity space. This visualization highlights how the planner evaluates and chooses optimal velocities under varying environmental conditions, thereby aids in understanding of decision-making process of the planner. These provides the valuable insights into the dynamics of trajectory planning and the tuning of hyper-parameters.

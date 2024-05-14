@@ -1,9 +1,9 @@
 <launch>
 
-  <!-- ROS parameters -->
-  <rosparam file="$(find dwa_planner)/config/params.yaml" command="load" subst_value="true" />
-
   <!-- Launch DWA planner -->
-  <node pkg="dwa_planner" type="dwa_planner_node" name="dwa_planner_node" output="screen" />
+  <node pkg="dwa_planner" type="dwa_planner_node" name="dwa_planner_node" output="screen" >
+    <rosparam file="$(find dwa_planner)/config/params.yaml" command="load" subst_value="true" />
+  </node>
+
 
 </launch>

@@ -1,42 +1,36 @@
-dwa_planner_node:
-  topic:
-    goal: "/move_base_simple/goal"
-    pointcloud: /fake_laser_node/laser
+# dwa_planner_node
+topic:
+  goal: "/move_base_simple/goal"
+  pointcloud: /fake_laser_node/laser
 
-  frame_id:
-    baselink: "base_link"
-    map: "map"
+frame_id:
+  baselink: "base_link"
+  map: "map"
 
-  robot:
-    # referenceVelocity: 0.6 # [m/s] # Should be less than maxVelocity
-    maxVelocity: [0.6, 0.8] # [v, w]
-    wheelBaseLength: 0.6 # [m]
-    enableBackwardMotion:
-      false # Default: false
-      # Backwardmotion is not significantly tested
+robot:
+  maxVelocity: [0.6, 0.8] # [v, w] # Recommend to set small timeHorizon for large v
+  wheelBaseLength: 0.6 # [m]
+  enableBackwardMotion:
+    false # Default: false
+    # Backwardmotion is not well tested
 
-  collision:
-    robotRadius: 0.4 # [m]
-    safetyMargin: 0.1 # in velocity space
-    timeHorizon: 4.0 # [s]
-    maxLaserRange: 10.0 # [m]
+collision:
+  robotRadius: 0.2 # [m]
+  safetyMargin: 0.0 # [m]
+  timeHorizon: 4.0 # [s] # (maxVelocity * timeHorizon) is the maximum obstacle avoidance distance
+  maxLaserRange: 10.0 # [m] # Maximum range of laser that is used for obstacle avoidance
 
-  status:
-    goalNearRadius: 2.0 # [m]. Within this radius, robot stops avoidance and goes to goal
-    goalReachedRadius: 0.2 # [m]. Within this radius, robot stops
-    goalReachedAngle: 0.1 # [rad]
-    goalReachedVelocity: 0.1 # [m/s]
-    goalReachedAngularVelocity: 0.1 # [rad/s]
+status:
+  goalReachedRadius: 0.2 # [m]. Within this radius, robot stops
 
-  velocity_window:
-    resolution: 0.02 # [m/s]
+velocity_window:
+  resolution: 0.02 # [m/s]
 
-  cost_function:
-    targetHeading: 2.0
-    clearance: 0.2
-    velocity: 0.2
+cost_function:
+  targetHeading: 2.0
+  clearance: 0.2
+  velocity: 0.2
 
-  publish_rate:
-    cmdVel: 10 # [Hz]
-    dynamicWindow: 5 # [Hz]
-    use_debug: true
+publish_rate:
+  cmdVel: 10 # [Hz]
+  dynamicWindow: 10 # [Hz]
