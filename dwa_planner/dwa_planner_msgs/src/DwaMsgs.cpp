@@ -9,8 +9,7 @@
 
 #include "dwa_planner_msgs/DwaMsgs.h"
 
-void DwaMsgs::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, visualization_msgs::Marker& msg,
-                        const std::string& color)
+void DwaMsgs::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, visualization_msgs::Marker& msg)
 {
   msg.header.frame_id = "base_link";
   msg.header.stamp = ros::Time::now();
@@ -22,34 +21,11 @@ void DwaMsgs::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, vi
 
   msg.scale.x = 0.01;
 
-  if (color == "red")  // red
-  {
-    msg.color.r = 1.0;
-    msg.color.g = 0.0;
-    msg.color.b = 0.0;
-    msg.color.a = 0.9;
-  }
-  if (color == "green")  // green
-  {
-    msg.color.r = 0.0;
-    msg.color.g = 1.0;
-    msg.color.b = 0.0;
-    msg.color.a = 1.0;
-  }
-  if (color == "blue")  // blue
-  {
-    msg.color.r = 0.0;
-    msg.color.g = 0.0;
-    msg.color.b = 1.0;
-    msg.color.a = 1.0;
-  }
-  else
-  {
-    msg.color.r = 1.0;
-    msg.color.g = 1.0;
-    msg.color.b = 1.0;
-    msg.color.a = 1.0;
-  }
+  // Default: green color
+  msg.color.r = 0.0;
+  msg.color.g = 1.0;
+  msg.color.b = 0.0;
+  msg.color.a = 1.0;
 
   TrajectorySimulator trajectory_sim(velocity, time_horizon);
   for (const auto& robot_position : trajectory_sim.getTrajectory())
@@ -62,13 +38,7 @@ void DwaMsgs::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, vi
   }
 }
 
-void DwaMsgs::toPathMsg(const Eigen::Vector2d& velocity, double time_horizon, visualization_msgs::Marker& msg)
-{
-  toPathMsg(velocity, time_horizon, msg, "green");
-}
-
-void DwaMsgs::toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualization_msgs::Marker& msg,
-                        bool has_collision)
+void DwaMsgs::toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualization_msgs::Marker& msg)
 {
   msg.header.frame_id = "base_link";
   msg.header.stamp = ros::Time::now();
@@ -80,20 +50,11 @@ void DwaMsgs::toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualiz
 
   msg.scale.x = 0.01;
 
-  if (has_collision)  // red
-  {
-    msg.color.r = 1.0;
-    msg.color.g = 0.0;
-    msg.color.b = 0.0;
-    msg.color.a = 0.5;
-  }
-  else  // green
-  {
-    msg.color.r = 0.0;
-    msg.color.g = 1.0;
-    msg.color.b = 0.0;
-    msg.color.a = 1.0;
-  }
+  // Default: green color
+  msg.color.r = 0.0;
+  msg.color.g = 1.0;
+  msg.color.b = 0.0;
+  msg.color.a = 1.0;
 
   for (const auto& robot_position : trajectory)
   {
@@ -102,11 +63,6 @@ void DwaMsgs::toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualiz
     p.y = robot_position.y();
     msg.points.push_back(p);
   }
-}
-
-void DwaMsgs::toPathMsg(const std::vector<Eigen::Vector2d>& trajectory, visualization_msgs::Marker& msg)
-{
-  toPathMsg(trajectory, msg, false);
 }
 
 void DwaMsgs::toPathMsg(const std::vector<Eigen::Vector2d>& velocity_candidates, double time_horizon,
@@ -134,4 +90,33 @@ void DwaMsgs::toVelocityMsg(const Eigen::Vector2d& velocity, geometry_msgs::Twis
   msg.angular.x = 0;
   msg.angular.y = 0;
   msg.angular.z = velocity.y();
+}
+
+void DwaMsgs::toCircleMsg(const Eigen::Vector2d& center, double radius, visualization_msgs::Marker& msg)
+{
+  msg.header.frame_id = "base_link";
+  msg.header.stamp = ros::Time::now();
+  msg.ns = "dwa";
+  msg.id = 0;
+  msg.lifetime = ros::Duration();
+  msg.action = visualization_msgs::Marker::ADD;
+  msg.type = visualization_msgs::Marker::LINE_STRIP;
+
+  msg.scale.x = 0.01;
+
+  // Default: green color
+  msg.color.r = 0.0;
+  msg.color.g = 1.0;
+  msg.color.b = 0.0;
+  msg.color.a = 1.0;
+
+  const int num_points = 100;
+  for (int i = 0; i < num_points; ++i)
+  {
+    geometry_msgs::Point p;
+    p.x = center.x() + radius * cos(2 * M_PI * i / num_points);
+    p.y = center.y() + radius * sin(2 * M_PI * i / num_points);
+    p.z = 0.1;
+    msg.points.push_back(p);
+  }
 }
