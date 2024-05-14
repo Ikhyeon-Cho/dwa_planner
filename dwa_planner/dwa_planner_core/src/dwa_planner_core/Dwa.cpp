@@ -232,11 +232,13 @@ void Dwa::updateClearance()
 
     // Compute the closest obstacle position from predicted position
     double min_distance = 1e+4;
-    auto predicted_position = predicted_trajectory.back();
     for (const auto& obstacle : *obstacle_points_)
     {
-      double distance = (predicted_position - Eigen::Vector2d(obstacle.x, obstacle.y)).norm();
-      min_distance = std::min(min_distance, distance);
+      for (const auto& point : predicted_trajectory)
+      {
+        double distance = (point - Eigen::Vector2d(obstacle.x, obstacle.y)).norm();
+        min_distance = std::min(min_distance, distance);
+      }
     }
 
     clearance_cost(i) = min_distance * std::exp(min_distance);
@@ -335,13 +337,13 @@ void Dwa::updateCostFunction()
   // Clear goal should be guaranteed by global planner
   if (isNearGoal())
   {
-    cost_matrix = (2 * weight_targetHeading_ * targetHeading) + (weight_velocity_ * velocity);
+    cost_matrix = (1 * weight_targetHeading_ * targetHeading) + (weight_velocity_ * velocity);
   }
   // clearance weight is adaptively adjusted by using closest obstacle distance
   else if (hasPotentialCollision())
   {
     cost_matrix =
-        (0.1 * weight_targetHeading_ * targetHeading) + (weight_velocity_ * velocity) + (weight_clearance_ * clearance);
+        (0.05 * weight_targetHeading_ * targetHeading) + (weight_velocity_ * velocity) + (weight_clearance_ * clearance);
   }
   else
   {
@@ -363,25 +365,11 @@ bool Dwa::hasPotentialCollision() const
   {
     if (velocity_window_.isInvalidAt(*iterator))
     {
-      std::cout << "has potential collision" << std::endl;
       return true;
     }
   }
 
-  std::cout << "no potential collision" << std::endl;
   return false;
-
-  if (velocity_obstacle_indices_.size() > 0)
-  {
-    std::cout << "has potential collision" << std::endl;
-    return true;
-  }
-  else
-  {
-    std::cout << "no potential collision" << std::endl;
-
-    return false;
-  }
 }
 
 Eigen::Vector2d Dwa::getBestPlan()
@@ -430,7 +418,7 @@ bool Dwa::hasNoPlan() const
 
 bool Dwa::isNearGoal() const
 {
-  return (goal_position_).norm() < 2.0 + robot_radius_;
+  return (goal_position_).norm() < (0.5 * time_horizon_ * max_velocity_) + (2 * robot_radius_);
 }
 
 bool Dwa::hasBackwardGoal() const

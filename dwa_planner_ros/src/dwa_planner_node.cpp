@@ -16,7 +16,7 @@ int main(int argc, char** argv)
 
   DwaPlanner node;
 
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(50);
   while (ros::ok())
   {
     ros::spinOnce();

@@ -19,7 +19,7 @@ DwaPlanner::DwaPlanner() : dwa_planner_{ robot_max_v_, robot_max_w_, velocity_re
   dwa_planner_.setReferenceVelocity(robot_ref_v_);
 
   // Collsion check paramters
-  dwa_planner_.setRobotSize(robot_radius_);
+  dwa_planner_.setRobotSize(robot_radius_ + safety_margin_);
   dwa_planner_.setTimeHorizon(time_horizon_);
 
   // Dwa cost parameters
@@ -36,13 +36,14 @@ DwaPlanner::DwaPlanner() : dwa_planner_{ robot_max_v_, robot_max_w_, velocity_re
   if (use_debug_)
   {
     pub_obstacle_cloud_ = nh_priv_.advertise<sensor_msgs::PointCloud2>("debug/pointcloud", 10);
-    pub_velocity_window_ = nh_priv_.advertise<grid_map_msgs::GridMap>("debug/window", 10);
+    pub_velocity_window_ = nh_priv_.advertise<grid_map_msgs::GridMap>("debug/window", 1);
     pub_target_heading_plan_ = nh_priv_.advertise<visualization_msgs::Marker>("debug/target_heading_plan", 10);
     pub_clearance_plan_ = nh_priv_.advertise<visualization_msgs::Marker>("debug/clearance_plan", 10);
     pub_velocity_plan_ = nh_priv_.advertise<visualization_msgs::Marker>("debug/velocity_plan", 10);
+    pub_dynamic_window_ = nh_priv_.advertise<grid_map_msgs::GridMap>("debug/dynamic_window", 1);
 
     ROS_INFO("%-65s %s", "Debug mode is enabled. Publishing dynamic window costs...", "[ DWA Planner]");
-    publish_timer_.start();
+    window_publish_timer_.start();
   }
 }
 
@@ -54,8 +55,8 @@ void DwaPlanner::goalCallback(const geometry_msgs::PoseStampedConstPtr& msg)
   if (!alignToGoal(msg_goal_))
     return;
 
-  local_plan_timer_.start();  // plan starts when goal is set
-  publish_timer_.start();     // publish best local plan
+  local_plan_timer_.start();      // plan starts when goal is set
+  window_publish_timer_.start();  // publish best local plan
 }
 
 bool DwaPlanner::alignToGoal(const geometry_msgs::PoseStamped& goal)
@@ -70,50 +71,53 @@ bool DwaPlanner::alignToGoal(const geometry_msgs::PoseStamped& goal)
   }
 
   // Check whether the goal is behind the robot
+  // If the goal is behind the robot, the robot should align to the goal first
+  // Otherwise, the robot does not need to align to the goal
   if (local_goal.pose.position.x > 0)
-  {
-    is_aligned = true;
     return true;
-  }
 
   ROS_INFO("%-65s %s", "Aligning to the goal...", "[ DWA Planner]");
 
   while (!is_aligned && ros::ok())
   {
-    // Keep aligning the robot to the goal
+    // Keep updating the goal position from the robot
     getLocalGoal(goal, local_goal);
     const auto& goal_position = local_goal.pose.position;
+
+    // Just for DWA velocity window visualization
     dwa_planner_.setGoal(goal_position.x, goal_position.y);
     dwa_planner_.updateWindow();
+    visualizeTrajectories();
 
     Eigen::Vector2d robot_heading_vector(1, 0);
-    Eigen::Vector2d target_heading_vector(local_goal.pose.position.x, local_goal.pose.position.y);
+    Eigen::Vector2d target_heading_vector(goal_position.x, goal_position.y);
+
     double angle_diff = std::atan2(target_heading_vector.y(), target_heading_vector.x()) -
                         std::atan2(robot_heading_vector.y(), robot_heading_vector.x());
+    double angle_diff_thrsh = 0.1;  // 0.1 rad = 5.7 deg
+    if (std::abs(angle_diff) < angle_diff_thrsh)
+      is_aligned = true;
 
-    const auto left_rotation = angle_diff > 1e-4;
-    const auto right_rotation = angle_diff < -1e-4;
-    if (std::abs(angle_diff) > 0.1 && left_rotation)
+    const auto positive_zero = 1e-4;
+    const auto negative_zero = -1e-4;
+    const auto need_left_rotation = angle_diff > positive_zero;
+    const auto need_right_rotation = angle_diff < negative_zero;
+
+    if (!is_aligned && need_left_rotation)
     {
-      // rotate at left
       geometry_msgs::Twist msg_vel;
       DwaMsgs::toVelocityMsg(Eigen::Vector2d(0, 0.5), msg_vel);
       pub_velocity_.publish(msg_vel);
       ros::spinOnce();
       ros::Rate(velocity_pub_rate_).sleep();
     }
-    else if (std::abs(angle_diff) > 0.1 && right_rotation)
+    if (!is_aligned && need_right_rotation)
     {
-      // rotate at right
       geometry_msgs::Twist msg_vel;
       DwaMsgs::toVelocityMsg(Eigen::Vector2d(0, -0.5), msg_vel);
       pub_velocity_.publish(msg_vel);
       ros::spinOnce();
       ros::Rate(velocity_pub_rate_).sleep();
-    }
-    else
-    {
-      is_aligned = true;
     }
   }
 
@@ -131,8 +135,6 @@ void DwaPlanner::plan(const ros::TimerEvent& event)
     return;
   }
 
-  // Since the robot is keep moving, goal position in local view should be updated
-  // --> Goal should be transformed to local(robot) frame first. Then fed into the local planner
   geometry_msgs::PoseStamped local_goal;
   if (!getLocalGoal(msg_goal_, local_goal))
   {
@@ -154,10 +156,9 @@ void DwaPlanner::plan(const ros::TimerEvent& event)
     return;
   }
 
-  else
+  else  // Update the local plan
   {
     ROS_INFO_THROTTLE(2, "%-65s %s", "Planning...", "[ DWA Planner]");
-    // Update local plan
     const auto& goal_position = local_goal.pose.position;
     dwa_planner_.setGoal(goal_position.x, goal_position.y);
     dwa_planner_.updateWindow();
@@ -166,6 +167,9 @@ void DwaPlanner::plan(const ros::TimerEvent& event)
     geometry_msgs::Twist msg_vel;
     DwaMsgs::toVelocityMsg(planned_velocity, msg_vel);
     pub_velocity_.publish(msg_vel);
+
+    // Visualize the trajectories
+    visualizeTrajectories();
   }
 }
 
@@ -221,7 +225,7 @@ void DwaPlanner::laserCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   obstacle_points_ =
       ros_utils::pcl::filterPointcloudByRange<pcl::PointWithRange>(pointcloud_downsampled, 0, max_laser_range_);
   obstacle_points_ =
-      ros_utils::pcl::filterPointcloudByField<pcl::PointWithRange>(obstacle_points_, "x", 0, max_laser_range_);
+      ros_utils::pcl::filterPointcloudByField<pcl::PointWithRange>(obstacle_points_, "x", -1.0, max_laser_range_);
 
   if (obstacle_points_->empty())
     return;
@@ -258,87 +262,115 @@ void DwaPlanner::visualizeTrajectories()
     visualization_msgs::Marker path_msg;
     if (window.isInvalidAt(index))
     {
-      DwaMsgs::toPathMsg(Eigen::Vector2d(v, w), time_horizon_, path_msg, "red");
-      path_msg.id = i;
-      path_msg.color.r = 1.0;
-      path_msg.color.g = 0.0;
-      path_msg.color.b = 0.0;
-      path_msg.color.a = 0.9;
-      msg.markers.push_back(path_msg);
+      DwaMsgs::toPathMsg(Eigen::Vector2d(v, w), 0.0, path_msg);
+      path_msg.id = w_index;
+
+      msg_trajectories.markers.push_back(path_msg);
     }
     else
     {
-      DwaMsgs::toPathMsg(Eigen::Vector2d(v, w), time_horizon_, path_msg, "green");
-      path_msg.id = i;
-      msg.markers.push_back(path_msg);
+      // green color for collision-free trajectories
+      DwaMsgs::toPathMsg(Eigen::Vector2d(v, w), time_horizon_, path_msg);
+      path_msg.id = w_index;
+
+      path_msg.color.r = 0.0;
+      path_msg.color.g = 1.0;
+      path_msg.color.b = 0.0;
+      path_msg.color.a = 0.4;
+      msg_trajectories.markers.push_back(path_msg);
     }
   }
-  pub_path_candidates_.publish(msg);
+  pub_path_candidates_.publish(msg_trajectories);
 
-  // // Visualize the path candidates around the best plan
-  // visualization_msgs::MarkerArray msg_candidates;
-  // auto planned_velocity_index = dwa_planner_.getBestPlanVelocityIndex();
-
-  // std::cout << planned_velocity_index << std::endl << std::endl;
-  
-  // auto planned_v_index = planned_velocity_index.x();
-  // auto planned_w_index = planned_velocity_index.y();
-  // auto min_idx = std::max(0, planned_v_index - 10);
-  // auto max_idx = std::min(window.getSize()(1), planned_v_index + 10);
-  // for (size_t i = min_idx; i < max_idx; ++i)
-  // {
-  //   grid_map::Index index(max_v_index.x(), i);  // max linear vel
-  //   auto [v, w] = window.getVelocityAt(index);
-  //   visualization_msgs::Marker path_msg;
-  //   DwaMsgs::toPathMsg(Eigen::Vector2d(v, w), time_horizon_, path_msg, "blue");
-  //   path_msg.id = i;
-  //   msg_candidates.markers.push_back(path_msg);
-  // }
-  // pub_path_around_best_.publish(msg_candidates);
-}
-
-void DwaPlanner::publish(const ros::TimerEvent& event)
-{
-  // Best local plan (blue)
+  // Visualize the best local plan (light blue)
   auto planned_velocity = dwa_planner_.getBestPlan();
   visualization_msgs::Marker msg_path;
   DwaMsgs::toPathMsg(planned_velocity, time_horizon_, msg_path);
-  msg_path.color.b = 1.0;  // blue
-  msg_path.scale.x = 0.05;
+  msg_path.color.r = 0.0;
+  msg_path.color.g = 1.0;
+  msg_path.color.b = 1.0;
+  msg_path.color.a = 1.0;
+  msg_path.scale.x *= 5;
   pub_path_best_.publish(msg_path);
 
-  if (use_debug_)
+  // Visualize the robot radius at the best plan
+  TrajectorySimulator sim(planned_velocity, time_horizon_);
+  auto trajectory = sim.getTrajectory();
+  visualization_msgs::MarkerArray msg_plan_with_circle;
+  int id = 0;
+  int sample_rate = 3;
+  for (const auto& robot_position : trajectory)
   {
-    // obstacles
-    sensor_msgs::PointCloud2 obstacle;
-    pcl::toROSMsg(*obstacle_points_, obstacle);
-    pub_obstacle_cloud_.publish(obstacle);
+    if (id % sample_rate != 0)
+    {
+      id++;
+      continue;
+    }
 
-    // Cost Window
-    auto v_window_visualize = dwa_planner_.getVelocityWindow();
-    v_window_visualize["TargetHeading"] *= 0.3;
-    v_window_visualize["Clearance"] *= 0.3;
-    v_window_visualize["Velocity"] *= 0.3;
-    v_window_visualize["TotalCost"] *= 0.3;
-    grid_map_msgs::GridMap window;
-    grid_map::GridMapRosConverter::toMessage(v_window_visualize, window);
-    pub_velocity_window_.publish(window);
+    visualization_msgs::Marker msg_circle;
+    DwaMsgs::toCircleMsg(robot_position, robot_radius_, msg_circle);
+    msg_circle.id = id;
+    msg_circle.color.r = 0.0;
+    msg_circle.color.g = 0.0;
+    msg_circle.color.b = 1.0;
+    msg_circle.color.a = 0.3;
+    msg_plan_with_circle.markers.push_back(msg_circle);
+    id++;
+  }
+  pub_path_best_with_circles_.publish(msg_plan_with_circle);
+}
 
-    // Target Heading Plan
-    auto target_heading_plan = dwa_planner_.getBestPlanAt("TargetHeading");
-    visualization_msgs::Marker msg_heading;
-    DwaMsgs::toPathMsg(target_heading_plan, time_horizon_, msg_heading);
-    // green
-    msg_heading.scale.x = 0.05;
-    pub_target_heading_plan_.publish(msg_heading);
+void DwaPlanner::publishForDebug(const ros::TimerEvent& event)
+{
+  // obstacles
+  sensor_msgs::PointCloud2 obstacle;
+  pcl::toROSMsg(*obstacle_points_, obstacle);
+  pub_obstacle_cloud_.publish(obstacle);
 
-    // Clearance Plan
-    auto clearance_plan = dwa_planner_.getBestPlanAt("Clearance");
-    visualization_msgs::Marker msg_clearance;
-    DwaMsgs::toPathMsg(clearance_plan, time_horizon_, msg_clearance);
-    msg_clearance.color.r = 1.0;  // red
-    msg_clearance.scale.x = 0.05;
-    pub_clearance_plan_.publish(msg_clearance);
+  // Cost Window
+  auto v_window_visualize = dwa_planner_.getVelocityWindow();
+  v_window_visualize["TargetHeading"] *= 0.3;
+  v_window_visualize["Clearance"] *= 0.3;
+  v_window_visualize["Velocity"] *= 0.3;
+  v_window_visualize["TotalCost"] *= 0.3;
+  v_window_visualize["valid_space"] *= 0.3;
+  grid_map_msgs::GridMap window;
+  grid_map::GridMapRosConverter::toMessage(v_window_visualize, window);
+  pub_velocity_window_.publish(window);
+
+  // Target Heading Plan (green)
+  auto target_heading_plan = dwa_planner_.getBestPlanAt("TargetHeading");
+  visualization_msgs::Marker msg_heading;
+  DwaMsgs::toPathMsg(target_heading_plan, time_horizon_, msg_heading);
+  msg_heading.scale.x *= 5;
+  pub_target_heading_plan_.publish(msg_heading);
+
+  // Clearance Plan (red)
+  auto clearance_plan = dwa_planner_.getBestPlanAt("Clearance");
+  visualization_msgs::Marker msg_clearance;
+  DwaMsgs::toPathMsg(clearance_plan, time_horizon_, msg_clearance);
+  msg_clearance.color.r = 1.0;  // red
+  msg_clearance.color.g = 0.0;
+  msg_clearance.color.b = 0.0;
+  msg_clearance.color.a = 1.0;
+  msg_clearance.scale.x *= 5;
+  pub_clearance_plan_.publish(msg_clearance);
+
+  // Dynamic window: get submap around the best plan index
+  auto planned_velocity_index = dwa_planner_.getBestPlanVelocityIndex();
+
+  // get submap
+  bool get_submap;
+  grid_map::Index submap_index(planned_velocity_index.x(), planned_velocity_index.y());
+  grid_map::Position submap_position;
+  dwa_planner_.getVelocityWindow().getPosition(submap_index, submap_position);
+
+  auto submap = dwa_planner_.getVelocityWindow().getSubmap(submap_position, grid_map::Length(0.15, 0.18), get_submap);
+  if (get_submap)
+  {
+    grid_map_msgs::GridMap msg_dynamic_window;
+    grid_map::GridMapRosConverter::toMessage(submap, msg_dynamic_window);
+    pub_dynamic_window_.publish(msg_dynamic_window);
   }
 }
 
