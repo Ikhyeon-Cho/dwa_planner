@@ -1,11 +1,11 @@
-# dwa planner
+# DWA Planner
 This repository provides the ROS implementation of [DWA (dynamic window approach)](https://en.wikipedia.org/wiki/Dynamic_window_approach) for real-time collision avoidance and trajectory planning of mobile robots. Given laser sensor inputs, the `dwa_planner` package computes the optimal linear and angular velocity to reach a goal while avoiding obstacles by pruning velocity candidates with potential collision.
 
 <p align='center'>
     <img src="dwa_planner/docs//dwa_demo.gif" alt="drawing" width="600"/>
 </p>
 
-This is a research code, expect that it changes often and any fitness for a particular purpose is disclaimed. If you are interested in the simulation tools, see [fake_simulation_ros](https://github.com/Ikhyeon-Cho/fake_simulation_ros) ROS package.
+This is a research code, expect that it changes often and any fitness for a particular purpose is disclaimed. If you are interested in the simulation tools, see [fake_simulation_ros](https://github.com/Ikhyeon-Cho/fake_simulation_ros)git  package.
 
 ## Features
 Our implementation is not only practical in use, but also offers real-time ROS rviz visualizations of the velocity samples from the velocity space. This visualization highlights how the planner evaluates and chooses optimal velocities under varying environmental conditions, thereby aids in understanding of decision-making process of the planner. These provides the valuable insights into the dynamics of trajectory planning and the tuning of hyper-parameters.
@@ -144,7 +144,7 @@ Using `test.launch` will create several publishers and publish messages for test
     For the testing purpose. The publish rate of the velocity window and the corresponding cost values.
 
 ## Citation
-If you find this package useful, please cite our paper:
+If you find this project useful, please cite our paper:
 
 ```bibtex
 @article{lee2022odsbot,
