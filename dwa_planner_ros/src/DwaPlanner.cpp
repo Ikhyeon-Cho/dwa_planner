@@ -243,45 +243,18 @@ double DwaPlanner::getMinDistanceToObstacle(const pcl::PointCloud<pcl::PointWith
   return min_distance;
 }
 
-// This will be moved to visualization node
-// objective functions and path candidates should be visualized in visualization node
-// local planner node only visualizes current best local plan and cmd_vel(not visualizable)
-void DwaPlanner::visualizeTrajectories(const ros::TimerEvent& event)
+void DwaPlanner::visualizeTrajectories()
 {
   const auto& window = dwa_planner_.getVelocityWindow();
 
-  int i = 0;
-  int subsample_interval = 2;
-
-  // Find the max valid velocity index
-  double v_max = 0;
-  grid_map::Index max_v_index;
-  for (grid_map::GridMapIterator iterator(window); !iterator.isPastEnd(); ++iterator)
+  // Visualize the valid path candidates
+  visualization_msgs::MarkerArray msg_trajectories;
+  for (size_t w_index = 0; w_index < window.getSize()(1); ++w_index)
   {
-    i += 1;
-
-    const auto& index = *iterator;
-    if (window.isInvalidAt(index))
-      continue;
-
-    if (i % subsample_interval != 0)
-      continue;
-
-    auto [v, w] = window.getVelocityAt(*iterator);
-    if (v > v_max)
-    {
-      v_max = v;
-      max_v_index = *iterator;
-    }
-  }
-
-  // Visualize the path candidates
-  visualization_msgs::MarkerArray msg;
-  // iteration to column-wise direction
-  for (size_t i = 0; i < window.getSize()(1); ++i)
-  {
-    grid_map::Index index(max_v_index.x(), i);  // max linear vel
+    auto max_v_index = window.getMaxVelocityIndexAt(w_index);
+    grid_map::Index index(max_v_index, w_index);  // Index with max v for each w
     auto [v, w] = window.getVelocityAt(index);
+
     visualization_msgs::Marker path_msg;
     if (window.isInvalidAt(index))
     {

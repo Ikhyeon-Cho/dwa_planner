@@ -72,3 +72,35 @@ grid_map::SubmapIterator VelocityWindow::getSquareIteratorAt(const grid_map::Ind
   grid_map::Index submap_buffer_size = grid_map::Index(2 * search_length + 1, 2 * search_length + 1);
   return grid_map::SubmapIterator(*this, submap_start_index, submap_buffer_size);
 }
+
+grid_map::Index VelocityWindow::getMaxVelocityIndex() const
+{
+  grid_map::Index max_index;
+  double max_v = -1e+4;
+  for (grid_map::GridMapIterator iterator(*this); !iterator.isPastEnd(); ++iterator)
+  {
+    if (isInvalidAt(*iterator))
+      continue;
+
+    auto [v, w] = getVelocityAt(*iterator);
+    if (v > max_v)
+    {
+      max_v = v;
+      max_index = *iterator;
+    }
+  }
+  return max_index;
+}
+
+int VelocityWindow::getMaxVelocityIndexAt(int idx_column) const
+{
+  // iteration for row elements (linear velocity space)
+  for (int i = getSize()(0) - 1; i >= 0; --i)
+  {
+    grid_map::Index index(i, idx_column);
+    if (isInvalidAt(index))
+      return std::max(i - 1, 0);
+  }
+
+  return 0;
+}

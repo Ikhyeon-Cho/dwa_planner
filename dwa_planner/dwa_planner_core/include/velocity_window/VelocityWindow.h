@@ -25,6 +25,8 @@ public:
   void makeValidAt(const grid_map::Index& index);
   void makeInvalidAt(const grid_map::Index& index);
   bool isInvalidAt(const grid_map::Index& index) const;
+  grid_map::Index getMaxVelocityIndex() const;
+  int getMaxVelocityIndexAt(int idx_column) const;
 
   grid_map::SubmapIterator getSquareIteratorAt(const grid_map::Index& query_index, int search_length) const;
 };
