@@ -1,7 +1,7 @@
 #include "dwa_planner_core/Dwa.h"
 
 Dwa::Dwa(double max_v, double max_w, double velocity_resolution, bool enable_backward)
-  : velocity_window_(max_v, max_w, velocity_resolution, enable_backward)
+  : velocity_window_(max_v, max_w, velocity_resolution, enable_backward), max_velocity_(max_v)
 {
   velocity_window_.add("TargetHeading", 0.0);
   velocity_window_.add("Velocity", 0.0);

@@ -101,6 +101,7 @@ private:
 
   VelocityWindow velocity_window_;
   Eigen::Vector2d goal_position_{ 0, 0 };
+  float max_velocity_{ 1.0 };        // [m/s]
   float reference_velocity_{ 0.6 };  // [m/s]
 
   // Cost function variables
