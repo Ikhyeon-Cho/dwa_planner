@@ -30,19 +30,19 @@ If you are interested in the algorithm itself, please refer to the original pape
 
 Target Heading (Paper) | Target Heading (Rviz) |
 :---: | :---: |
-<img src="dwa_planner/docs/target_heading_paper.png" width="400" /> | <img src="dwa_planner/docs/target_heading.gif" width="400" /> |
+<img src="dwa_planner/docs/target_heading_paper.png" width="300" /> | <img src="dwa_planner/docs/target_heading.gif" width="300" /> |
 
 Velocity (Paper) | Velocity (Rviz) |
 :---: | :---: |
-<img src="dwa_planner/docs/velocity_paper.png" width="400" /> | <img src="dwa_planner/docs/velocity.gif" width="400" /> |
+<img src="dwa_planner/docs/velocity_paper.png" width="300" /> | <img src="dwa_planner/docs/velocity.gif" width="300" /> |
 
 Clearance (Paper) | Clearance (Rviz) |
 :---: | :---: |
-<img src="dwa_planner/docs/clearance_paper.png" width="400" /> | <img src="dwa_planner/docs/clearance.gif" width="400" /> |
+<img src="dwa_planner/docs/clearance_paper.png" width="300" /> | <img src="dwa_planner/docs/clearance.gif" width="300" /> |
 
 Total Objective Function (Paper) | Total Objective Function (Rviz) |
 :---: | :---: |
-<img src="dwa_planner/docs/objective_function_paper.png" width="400" /> | <img src="dwa_planner/docs/objective_function.gif" width="400" /> |
+<img src="dwa_planner/docs/objective_function_paper.png" width="300" /> | <img src="dwa_planner/docs/objective_function.gif" width="300" /> |
 
 
 
@@ -75,48 +75,68 @@ sudo apt install ros-noetic-grid-map
   ```
   roslaunch dwa_planner run.launch
   ```
+3. To visualize the velocity samples and the corresponding cost values, use the following commands:
+```
+roslaunch dwa_planner test.launch
+``` 
+Using `test.launch` will create several publishers and publish messages for testing the whole planning process.
 
 #### Subscribed Topics
-- **`/map`** ([nav_msgs/OccupancyGrid](https://docs.ros.org/en/noetic/api/nav_msgs/html/msg/OccupancyGrid.html))
-The map for planning.
+- **`/laser`** ([sensor_msgs/PointCloud2](https://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/PointCloud2.html)) <br>
+    The laser for detecting obstacles.
 
-- **`/move_base_simple/goal`** ([geometry_msgs/PoseStamped](https://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html))
-The pose of navigation goal. When the goal message is not in the map frame, it is internally transformed to the map frame. 
+- **`/move_base_simple/goal`** ([geometry_msgs/PoseStamped](https://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/PoseStamped.html)) <br>
+    The pose of navigation goal. The goal is internally transformed to the local (typically, base_link) frame. 
 
-- **`/tf`** ([tf2_msgs/TFMessage](https://docs.ros.org/en/jade/api/tf2_msgs/html/msg/TFMessage.html))
-Transforms from tf tree. The current pose of the robot is obtained by using tf transforms
+- **`/tf`** ([tf2_msgs/TFMessage](https://docs.ros.org/en/jade/api/tf2_msgs/html/msg/TFMessage.html)) <br>
+    Transforms from tf tree. The current pose of the robot is obtained by using tf transforms
 
 #### Published Topics
-- **`/wavefront_planner/path`** ([nav_msgs/Path](https://docs.ros.org/en/noetic/api/nav_msgs/html/msg/Path.html))
-The computed path, published every time during navigation. See `~pathPublishRate` parameters to specify the publish rate.
+- **`/cmd_vel`** ([geometry_msgs/Twist](https://docs.ros.org/en/noetic/api/geometry_msgs/html/msg/Twist.html)) <br>
+    The computed best velocity, published every time during navigation. See `~publish_rate/cmdVel` parameters to specify the publish rate.
 
-- **`/wavefront_planner/debug/costmap`** ([grid_map_msgs/GridMap](https://docs.ros.org/en/kinetic/api/grid_map_msgs/html/msg/GridMap.html))
-For debug purpose. Visualize the costmap.
+- **`/dwa_planner_node/path/plan_best`** ([visualization_msgs/Marker](https://docs.ros.org/en/noetic/api/visualization_msgs/html/msg/Marker.html)) <br>
+    The predicted best path by assuming circular trajectories during the time horizon.
 
-- **`/wavefront_planner/debug/costmap`** ([nav_msgs/OccupancyGrid](https://docs.ros.org/en/noetic/api/nav_msgs/html/msg/OccupancyGrid.html))
-For debug purpose. Visualize the occupancy map that the planner perceives.
+- **`/dwa_planner_node/path/plan_best_circle`** ([visualization_msgs/MarkerArray](https://docs.ros.org/en/noetic/api/visualization_msgs/html/msg/MarkerArray.html)) <br>
+    The predicted best path with the robot radius. 
 
+- **`/dwa_planner_node/path/plan_candidates`** ([visualization_msgs/MarkerArray](https://docs.ros.org/en/noetic/api/visualization_msgs/html/msg/MarkerArray.html)) <br>
+    The admissible paths without collision. The objective function selects the best path among these path candidates.
 
 #### Parameters
-- **`~baselinkFrame`** (string, default: base_link)
-    The frame id of the robot. Inside the code, transform to this parameters will be used for robot pose calculation.
+- **`~robot/maxVelocity`** (tuple, default: [1.0, 1.0] ) <br>
+    The maximum velocity ($v, w$) of the robot. 
 
-- **`~mapFrame`** (string, default: map)
-    The frame id of the map. Inside the code, transform to this parameters will be used for robot pose calculation.
+- **`~robot/enableBackwardMotion`** (bool, default: false) <br>
+    If true, the velocity search space has negative velocity regions.
 
-- **`~pathPublishRate`** (double, default: 20 Hz)
-    The publish rate of the path.
+- **`~collision/robotRadius`** (double, default: 1.0) <br>
+    The size of the robot, assuming the circular shaped robot. The value is used for collision checking and emergency stop.
 
-- **`~propagateUnknownCell`** (bool, default: false)
-    If set true, then the wave propagation will search the unknown state regions.
+- **`~collision/safetyMargin`** (double, default: 0.0) <br>
+    The safety margin which will be added to the robot radius.
 
-- **`~inflationRadius`** (double, default: 0.5 meter)
-    The inflation range. Consider the robot size and set the value accordingly.
+- **`~collision/timeHorizon`** (double, default: 3.0) <br>
+    The time interval for making circular trajectories by constant velocity.
 
-- **`~debugMode`** (bool, default: false)
-    If set true, the node will publish the costmap and the received occupancy map.
+- **`~collision/maxLaserRange`** (double, default: 10.0) <br>
+    The maximum range of the laser input that the dwa will be used for collision checking.
 
-
+- **`~cost_function/targetHeading`** (double, default: 2.0) <br>
+    The weight for the *target heading* objective.
   
-  
+- **`~cost_function/clearance`** (double, default: 0.2) <br>
+    The weight for the *clearance* objective.
 
+- **`~cost_function/velocity`** (double, default: 0.2) <br>
+    The weight for the *velocity* objective.
+
+- **`~status/goalReachedRadius`** (double, default: 0.2) <br>
+    The tolerance of the distance to the goal that will be accepted as *arrived*. 
+
+- **`~publish_rate/cmdVel`** (double, default: 10.0) <br>
+    The publish rate of the computed velocity command. 
+
+- **`~publish_rate/dynamicWindow`** (double, default: 10.0) <br>
+    For the testing purpose. The publish rate of the velocity window and the corresponding cost values.
