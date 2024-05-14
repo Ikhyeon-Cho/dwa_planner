@@ -12,7 +12,7 @@ Our implementation is not only practical in use, but also offers real-time ROS r
 
 ### 1. Search Space
 The dynamic window approach considers exclusively the first time interval, and assumes that the velocities in the remaining $`n-1`$ time intervals are constant (which is equivalent to assuming zero accelerations in $`t_1 ; t_n`$). During the time interval, the following three aspects are considered for reducing the search space.
-- Circular trajectories within time interval ($`v,w`$ space)
+- Circular trajectories (thereby, $`v-w`$ space)
 - Collision-free velocity samples (indicated by light grey)
 - Dynamic window (indicated by moving black square)
 
@@ -81,6 +81,8 @@ roslaunch dwa_planner test.launch
 ``` 
 Using `test.launch` will create several publishers and publish messages for testing the whole planning process.
 
+## Nodes
+### dwa_planner_node
 #### Subscribed Topics
 - **`/laser`** ([sensor_msgs/PointCloud2](https://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/PointCloud2.html)) <br>
     The laser for detecting obstacles.
@@ -140,3 +142,18 @@ Using `test.launch` will create several publishers and publish messages for test
 
 - **`~publish_rate/dynamicWindow`** (double, default: 10.0) <br>
     For the testing purpose. The publish rate of the velocity window and the corresponding cost values.
+
+## Citation
+If you find this package useful, please cite our paper:
+
+```bibtex
+@article{lee2022odsbot,
+  title={ODS-Bot: Mobile robot navigation for outdoor delivery services}, 
+  author={Jinwon Lee, Geonhyeok Park, Ikhyeon Cho, Keundong Kang, Daehyun Pyo, Soohyun Cho, Minwoo Cho, and Woojin Chung},
+  journal={IEEE Access}, 
+  year={2022},
+  volume={10},
+  pages={107250-107258},
+  doi={10.1109/ACCESS.2022.3212768}
+}
+```
