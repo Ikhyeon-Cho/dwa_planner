@@ -3,13 +3,21 @@
   <rosparam file="$(find dwa_planner)/config/params.yaml" command="load" subst_value="true" />
 
   <!-- Launch DWA planner -->
-  <node pkg="dwa_planner" type="dwa_planner_node" name="dwa_planner_node" output="screen" />
+  <node pkg="dwa_planner" type="dwa_planner_node" name="dwa_planner_node" output="screen" >
+    <param name="use_debug" value="true" />
+  </node> 
 
   <!-- Launch RViz -->
   <node pkg="rviz" type="rviz" name="rviz_dwa_target_heading" args="-d $(find dwa_planner)/launch/rviz/target_heading.rviz" />
   <node pkg="rviz" type="rviz" name="rviz_dwa_velocity" args="-d $(find dwa_planner)/launch/rviz/velocity.rviz" />
   <node pkg="rviz" type="rviz" name="rviz_dwa_cleareance" args="-d $(find dwa_planner)/launch/rviz/clearance.rviz" />
   <node pkg="rviz" type="rviz" name="rviz_dwa_cost" args="-d $(find dwa_planner)/launch/rviz/cost.rviz" />
+  <node pkg="rviz" type="rviz" name="rviz_dwa_dynamic_window" args="-d $(find dwa_planner)/launch/rviz/dynamic_window.rviz" />
+
+  <!-- dwa visualization node -->
+  <node pkg="grid_map_visualization" type="grid_map_visualization" name="dwa_visualization" output="log">
+    <rosparam file="$(find dwa_planner)/config/visualization.yaml" />
+  </node>
 
 
 </launch>

@@ -1,0 +1,8 @@
+grid_map_topic: "/dwa_planner_node/debug/dynamic_window"
+grid_map_visualizations:
+  - name: "/dwa_planner_node/debug/dynamic_window_region"
+    type: map_region
+    params:
+      # black
+      color: 0x000000
+      line_width: 0.005
