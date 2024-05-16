@@ -67,7 +67,7 @@ sudo apt install ros-noetic-grid-map
   cd ..
   catkin build dwa_planner
   ```
-**Note:** For the best performance, complie with the option `-DCMAKE_BUILT_TYPE=release`. It makes significant improvements.
+**Note:** For the best performance, complie with the option `-DCMAKE_BUILD_TYPE=release`. It makes significant improvements.
 
 ## Basic Usage
 1. Configure the parameters in `dwa_planner_ros/config/params.yaml`
