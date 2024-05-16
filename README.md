@@ -52,7 +52,7 @@ Total Objective Function (Paper) | Total Objective Function (Rviz) |
 - Ubuntu (Tested on 20.04) 
 - ROS (Tested on [ROS Noetic](https://wiki.ros.org/noetic))
 - PCL >= 1.10 (Point cloud library)
-- [grid_map](https://github.com/ANYbotics/grid_map) library
+- [grid_map](https://github.com/ANYbotics/grid_map) library (For velocity space visualization)
 
 
 For installation of **`grid_map`**, use the following commands:
