@@ -24,7 +24,7 @@ Dynamic Window (Paper) | Dynamic Window (Rviz) |
 ### 2. Objective Function
 With the remaining admissible velocity samples, the dynamic window approach mainly considers the following three discretized cost functions for choosing the best velocity that maximizes the total objective function. 
 
-$$ G(v; \alpha) = \alpha \cdot \text{Heading} (v; w) + \beta \cdot \text{Clearance} (v; w) + \gamma \cdot \text{Velocity} (v; w) $$
+$$ G(v; \alpha, \beta, \gamma) = \alpha \cdot \text{Heading} (v; w) + \beta \cdot \text{Clearance} (v; w) + \gamma \cdot \text{Velocity} (v; w) $$
 
 If you are interested in the algorithm itself, please refer to the original paper for more information: [The Dynamic Window Approach to Collision Avoidance (1997, Fox et.al.)](https://ieeexplore.ieee.org/abstract/document/580977)
 
